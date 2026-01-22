@@ -401,6 +401,31 @@ else
         if [[ "$DOWNLOAD" != "n" && "$DOWNLOAD" != "N" ]]; then
             msg "در حال دانلود paqet..." "Downloading paqet..."
             
+            # تشخیص سیستم عامل و معماری
+            OS=""
+            ARCH=""
+            
+            # تشخیص سیستم عامل
+            case "$(uname -s)" in
+                Linux*)     OS="linux" ;;
+                Darwin*)    OS="darwin" ;;
+                CYGWIN*)    OS="windows" ;;
+                MINGW*)     OS="windows" ;;
+                MSYS*)      OS="windows" ;;
+                *)          OS="linux" ;;  # پیش‌فرض
+            esac
+            
+            # تشخیص معماری
+            case "$(uname -m)" in
+                x86_64|amd64)   ARCH="amd64" ;;
+                aarch64|arm64)  ARCH="arm64" ;;
+                armv7l|armv6l)  ARCH="arm" ;;
+                *)              ARCH="amd64" ;;  # پیش‌فرض
+            esac
+            
+            msg "   سیستم عامل: $OS" "   Operating System: $OS"
+            msg "   معماری: $ARCH" "   Architecture: $ARCH"
+            
             # استفاده از GitHub API برای پیدا کردن آخرین release و فایل‌های موجود
             if command -v curl &> /dev/null; then
                 msg "   در حال بررسی آخرین release..." "   Checking latest release..."
@@ -410,8 +435,15 @@ else
                 if [ -n "$LATEST_RELEASE" ]; then
                     msg "   آخرین نسخه پیدا شد: $LATEST_RELEASE" "   Latest version found: $LATEST_RELEASE"
                     
-                    # اول فرمت صحیح رو امتحان کن: paqet-linux-amd64-${LATEST_RELEASE}.tar.gz
-                    CORRECT_FILENAME="paqet-linux-amd64-${LATEST_RELEASE}.tar.gz"
+                    # تعیین فرمت فایل بر اساس سیستم عامل
+                    if [ "$OS" == "windows" ]; then
+                        FILE_EXT=".zip"
+                    else
+                        FILE_EXT=".tar.gz"
+                    fi
+                    
+                    # ساخت نام فایل صحیح: paqet-OS-ARCH-VERSION.EXT
+                    CORRECT_FILENAME="paqet-${OS}-${ARCH}-${LATEST_RELEASE}${FILE_EXT}"
                     DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${CORRECT_FILENAME}"
                     msg "   امتحان فرمت صحیح: $CORRECT_FILENAME..." "   Trying correct format: $CORRECT_FILENAME..."
                     
@@ -436,7 +468,8 @@ else
                     
                     # اگر پیدا نشد، فایل‌های واقعی موجود در release رو امتحان کن
                     if [ "$DOWNLOAD_SUCCESS" == false ]; then
-                        ASSET_NAMES=$(echo "$RELEASE_INFO" | python3 -c "import sys, json; data=json.load(sys.stdin); print('\n'.join([a['name'] for a in data.get('assets', []) if 'linux' in a['name'].lower() and 'amd64' in a['name'].lower()]))" 2>/dev/null || echo "$RELEASE_INFO" | grep '"name":' | grep -i 'linux.*amd64\|amd64.*linux' | sed -E 's/.*"name":\s*"([^"]+)".*/\1/')
+                        # استخراج نام فایل‌های موجود از API که با OS و ARCH مطابقت دارن
+                        ASSET_NAMES=$(echo "$RELEASE_INFO" | python3 -c "import sys, json; data=json.load(sys.stdin); print('\n'.join([a['name'] for a in data.get('assets', []) if '$OS' in a['name'].lower() and '$ARCH' in a['name'].lower()]))" 2>/dev/null || echo "$RELEASE_INFO" | grep '"name":' | grep -i "$OS.*$ARCH\|$ARCH.*$OS" | sed -E 's/.*"name":\s*"([^"]+)".*/\1/')
                         
                         if [ -n "$ASSET_NAMES" ]; then
                             for ASSET_NAME in $ASSET_NAMES; do
