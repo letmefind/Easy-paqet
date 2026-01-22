@@ -1,0 +1,35 @@
+# کانفیگ کلاینت (سرور A)
+# این فایل روی سرور A اجرا می‌شود و نقش SOCKS5 Proxy را دارد
+
+# تنظیمات شبکه
+network:
+  interface: "eth0"  # نام اینترفیس شبکه سرور A را اینجا بذار
+  gateway_mac: "00:00:00:00:00:00"  # MAC آدرس روتر سرور A را اینجا بذار
+
+# تنظیمات KCP (پروتکل انتقال سریع و قابل اعتماد)
+kcp:
+  # آدرس سرور B که می‌خوای بهش وصل بشی
+  remote_addr: "YOUR_SERVER_B_IP:9999"  # آی‌پی سرور B را اینجا بذار
+  # کلید رمزنگاری مشترک (باید با سرور B یکسان باشه)
+  secret: "AY9Frl1VHWJB01lmKqLgE6dJllLhF3Sn4Lw/6BrcyYY="
+  # تنظیمات KCP برای عملکرد بهتر
+  mode: "fast3"  # حالت fast3 برای سرعت بالا
+  mtu: 1350
+  sndwnd: 1024
+  rcvwnd: 1024
+  datashard: 10
+  parityshard: 3
+  nodelay: 1
+  interval: 10
+  resend: 2
+  nc: 1
+
+# SOCKS5 Listener - اینجا کاربران بهت وصل می‌شن
+listeners:
+  - type: "socks5"
+    bind: "127.0.0.1:1080"  # روی localhost و پورت 1080 گوش می‌ده
+    # این پورت رو کاربرانت می‌تونن استفاده کنن
+
+# لاگ‌گیری (اختیاری)
+log:
+  level: "info"  # می‌تونی info, debug, warn, error بذاری
