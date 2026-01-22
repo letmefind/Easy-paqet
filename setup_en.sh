@@ -365,6 +365,8 @@ if [ "$ROLE" == "server" ]; then
                     LATEST_RELEASE=$(echo "$RELEASE_INFO" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
                     
                     if [ -n "$LATEST_RELEASE" ]; then
+                        echo "   Latest release: $LATEST_RELEASE"
+                        
                         # Determine file extension based on OS
                         if [ "$OS" == "windows" ]; then
                             FILE_EXT=".zip"
@@ -375,74 +377,121 @@ if [ "$ROLE" == "server" ]; then
                         CORRECT_FILENAME="paqet-${OS}-${ARCH}-${LATEST_RELEASE}${FILE_EXT}"
                         DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${CORRECT_FILENAME}"
                         
+                        echo "   Trying: $CORRECT_FILENAME"
                         DOWNLOAD_SUCCESS=false
                         
-                        if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
-                            TEMP_FILE=$(mktemp)
-                            wget "$DOWNLOAD_URL" -O "$TEMP_FILE" 2>/dev/null
+                        # Use curl if wget is not available (common on macOS)
+                        if command -v wget &> /dev/null; then
+                            DOWNLOAD_CMD="wget"
+                            CHECK_CMD="wget -q --spider"
+                        else
+                            DOWNLOAD_CMD="curl -L -o"
+                            CHECK_CMD="curl -s -o /dev/null -w '%{http_code}'"
+                        fi
+                        
+                        # Try the correct filename first
+                        if [ "$DOWNLOAD_CMD" == "wget" ]; then
+                            if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
+                                TEMP_FILE=$(mktemp)
+                                wget "$DOWNLOAD_URL" -O "$TEMP_FILE" 2>/dev/null
+                                DOWNLOAD_OK=$?
+                            else
+                                DOWNLOAD_OK=1
+                            fi
+                        else
+                            HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' "$DOWNLOAD_URL" 2>/dev/null)
+                            if [ "$HTTP_CODE" == "200" ]; then
+                                TEMP_FILE=$(mktemp)
+                                curl -L "$DOWNLOAD_URL" -o "$TEMP_FILE" 2>/dev/null
+                                DOWNLOAD_OK=$?
+                            else
+                                DOWNLOAD_OK=1
+                            fi
+                        fi
+                        
+                        if [ $DOWNLOAD_OK -eq 0 ] && [ -f "$TEMP_FILE" ] && [ -s "$TEMP_FILE" ]; then
+                            echo "   Downloading..."
+                            if [ "$FILE_EXT" == ".tar.gz" ] || [ "$FILE_EXT" == ".tgz" ]; then
+                                tar -xzf "$TEMP_FILE" -C . 2>/dev/null
+                            elif [ "$FILE_EXT" == ".zip" ]; then
+                                unzip -q "$TEMP_FILE" -d . 2>/dev/null
+                            fi
+                            rm "$TEMP_FILE"
                             
-                            if [ $? -eq 0 ] && [ -f "$TEMP_FILE" ]; then
-                                if [ "$FILE_EXT" == ".tar.gz" ] || [ "$FILE_EXT" == ".tgz" ]; then
-                                    tar -xzf "$TEMP_FILE" -C . 2>/dev/null
-                                elif [ "$FILE_EXT" == ".zip" ]; then
-                                    unzip -q "$TEMP_FILE" -d . 2>/dev/null
-                                fi
-                                rm "$TEMP_FILE"
-                                
-                                # Find extracted paqet file
-                                if [ -f "./paqet" ]; then
+                            # Find extracted paqet file
+                            if [ -f "./paqet" ]; then
+                                chmod +x paqet
+                                PAQET_CMD="./paqet"
+                                DOWNLOAD_SUCCESS=true
+                                echo "✓ Paqet downloaded and extracted"
+                            else
+                                # Look for paqet files in subdirectories or with different names
+                                PAQET_FILE=$(find . -maxdepth 2 -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
+                                if [ -n "$PAQET_FILE" ]; then
+                                    mv "$PAQET_FILE" ./paqet
                                     chmod +x paqet
                                     PAQET_CMD="./paqet"
                                     DOWNLOAD_SUCCESS=true
-                                else
-                                    # Look for paqet files in subdirectories or with different names
-                                    PAQET_FILE=$(find . -maxdepth 2 -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
-                                    if [ -n "$PAQET_FILE" ]; then
-                                        mv "$PAQET_FILE" ./paqet
-                                        chmod +x paqet
-                                        PAQET_CMD="./paqet"
-                                        DOWNLOAD_SUCCESS=true
-                                    fi
+                                    echo "✓ Paqet downloaded and extracted"
                                 fi
                             fi
                         fi
                         
                         # If not found, try actual files from release
                         if [ "$DOWNLOAD_SUCCESS" == false ]; then
+                            echo "   Trying assets from release..."
                             # Extract asset names from API that match OS and ARCH
                             ASSET_NAMES=$(echo "$RELEASE_INFO" | python3 -c "import sys, json; data=json.load(sys.stdin); print('\n'.join([a['name'] for a in data.get('assets', []) if '$OS' in a['name'].lower() and '$ARCH' in a['name'].lower()]))" 2>/dev/null || echo "$RELEASE_INFO" | grep '"name":' | grep -i "$OS.*$ARCH\|$ARCH.*$OS" | sed -E 's/.*"name":\s*"([^"]+)".*/\1/')
                             
                             if [ -n "$ASSET_NAMES" ]; then
                                 for ASSET_NAME in $ASSET_NAMES; do
                                     DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${ASSET_NAME}"
+                                    echo "   Trying: $ASSET_NAME"
                                     
-                                    if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
-                                        TEMP_FILE=$(mktemp)
-                                        wget "$DOWNLOAD_URL" -O "$TEMP_FILE" 2>/dev/null
+                                    if [ "$DOWNLOAD_CMD" == "wget" ]; then
+                                        if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
+                                            TEMP_FILE=$(mktemp)
+                                            wget "$DOWNLOAD_URL" -O "$TEMP_FILE" 2>/dev/null
+                                            DOWNLOAD_OK=$?
+                                        else
+                                            DOWNLOAD_OK=1
+                                        fi
+                                    else
+                                        HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' "$DOWNLOAD_URL" 2>/dev/null)
+                                        if [ "$HTTP_CODE" == "200" ]; then
+                                            TEMP_FILE=$(mktemp)
+                                            curl -L "$DOWNLOAD_URL" -o "$TEMP_FILE" 2>/dev/null
+                                            DOWNLOAD_OK=$?
+                                        else
+                                            DOWNLOAD_OK=1
+                                        fi
+                                    fi
+                                    
+                                    if [ $DOWNLOAD_OK -eq 0 ] && [ -f "$TEMP_FILE" ] && [ -s "$TEMP_FILE" ]; then
+                                        echo "   Downloading..."
+                                        if [[ "$ASSET_NAME" == *.tar.gz ]] || [[ "$ASSET_NAME" == *.tgz ]]; then
+                                            tar -xzf "$TEMP_FILE" -C . 2>/dev/null
+                                        elif [[ "$ASSET_NAME" == *.zip ]]; then
+                                            unzip -q "$TEMP_FILE" -d . 2>/dev/null
+                                        fi
+                                        rm "$TEMP_FILE"
                                         
-                                        if [ $? -eq 0 ] && [ -f "$TEMP_FILE" ]; then
-                                            if [[ "$ASSET_NAME" == *.tar.gz ]] || [[ "$ASSET_NAME" == *.tgz ]]; then
-                                                tar -xzf "$TEMP_FILE" -C . 2>/dev/null
-                                            elif [[ "$ASSET_NAME" == *.zip ]]; then
-                                                unzip -q "$TEMP_FILE" -d . 2>/dev/null
-                                            fi
-                                            rm "$TEMP_FILE"
-                                            
-                                            # Find extracted paqet file
-                                            if [ -f "./paqet" ]; then
+                                        # Find extracted paqet file
+                                        if [ -f "./paqet" ]; then
+                                            chmod +x paqet
+                                            PAQET_CMD="./paqet"
+                                            DOWNLOAD_SUCCESS=true
+                                            echo "✓ Paqet downloaded and extracted"
+                                            break
+                                        else
+                                            PAQET_FILE=$(find . -maxdepth 2 -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
+                                            if [ -n "$PAQET_FILE" ]; then
+                                                mv "$PAQET_FILE" ./paqet
                                                 chmod +x paqet
                                                 PAQET_CMD="./paqet"
                                                 DOWNLOAD_SUCCESS=true
+                                                echo "✓ Paqet downloaded and extracted"
                                                 break
-                                            else
-                                                PAQET_FILE=$(find . -maxdepth 2 -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
-                                                if [ -n "$PAQET_FILE" ]; then
-                                                    mv "$PAQET_FILE" ./paqet
-                                                    chmod +x paqet
-                                                    PAQET_CMD="./paqet"
-                                                    DOWNLOAD_SUCCESS=true
-                                                    break
-                                                fi
                                             fi
                                         fi
                                     fi
