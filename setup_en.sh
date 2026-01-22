@@ -436,7 +436,7 @@ TEMP_EOF
             echo "To transfer to client server:"
             echo "  scp $CLIENT_PACKAGE user@client-server:/tmp/"
             echo ""
-            echo "Or via USB/SD Card"
+            echo "Or via tools like WinSCP"
         fi
         
         rm -f /tmp/create_client_package_temp.sh
@@ -583,13 +583,13 @@ else
                             for ASSET_NAME in $ASSET_NAMES; do
                                 DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${ASSET_NAME}"
                                 echo "   Trying actual file: $ASSET_NAME..."
-                            
-                            # Download file
-                            if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
-                                TEMP_FILE=$(mktemp)
-                                wget "$DOWNLOAD_URL" -O "$TEMP_FILE" 2>/dev/null
                                 
-                                if [ $? -eq 0 ] && [ -f "$TEMP_FILE" ]; then
+                                # Download file
+                                if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
+                                    TEMP_FILE=$(mktemp)
+                                    wget "$DOWNLOAD_URL" -O "$TEMP_FILE" 2>/dev/null
+                                    
+                                    if [ $? -eq 0 ] && [ -f "$TEMP_FILE" ]; then
                                     # If tar.gz or tar, extract it
                                     if [[ "$ASSET_NAME" == *.tar.gz ]] || [[ "$ASSET_NAME" == *.tgz ]]; then
                                         echo "   Extracting from tar.gz..."
@@ -645,10 +645,10 @@ else
                                         DOWNLOAD_SUCCESS=true
                                         break
                                     fi
+                                    fi
                                 fi
-                            fi
-                        done
-                    fi
+                            done
+                        fi
                     
                     if [ "$DOWNLOAD_SUCCESS" == false ]; then
                         echo ""

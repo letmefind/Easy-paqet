@@ -436,7 +436,7 @@ TEMP_EOF
             echo "برای انتقال به سرور کلاینت:"
             echo "  scp $CLIENT_PACKAGE user@client-server:/tmp/"
             echo ""
-            echo "یا از طریق USB/SD Card"
+            echo "یا با ابزارهایی مثل WinSCP"
         fi
         
         rm -f /tmp/create_client_package_temp.sh
