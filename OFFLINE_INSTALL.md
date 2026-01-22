@@ -4,7 +4,7 @@
 
 ## 📦 فایل‌های مورد نیاز
 
-برای نصب Offline، به این فایل‌ها نیاز دارید:
+برای نصب Offline، به این فایل‌ها نیاز داری:
 
 ### 1. فایل‌های اسکریپت
 - `setup.sh` - راه‌انداز اصلی
@@ -28,20 +28,27 @@
 
 ## 🔧 ساخت بسته Offline
 
-### روش 1: استفاده از اسکریپت خودکار
+### روش 1: استفاده از اسکریپت خودکار (توصیه می‌شه!)
+
+اگه روی سرور اصلی (با اینترنت) هستی و می‌خوای بسته Offline برای کلاینت بسازی:
 
 ```bash
-# روی یک سرور با اینترنت
-chmod +x create_offline_package.sh
-./create_offline_package.sh
+# روی سرور اصلی، وقتی اسکریپت setup.sh رو اجرا می‌کنی
+# و می‌خوای بسته Offline بسازی، اسکریپت خودش ازت می‌پرسه
+# که آیا می‌خوای بسته Offline بسازی یا نه
+
+./setup.sh
+# وقتی ازت پرسید، Y بزن
 ```
 
 این اسکریپت:
 - همه فایل‌های لازم رو جمع می‌کنه
-- فایل‌های باینری paqet رو برای سیستم‌عامل‌های مختلف دانلود می‌کنه
-- یک بسته tar.gz می‌سازه
+- فایل باینری paqet رو دانلود می‌کنه
+- یک بسته tar می‌سازه که می‌تونی به سرور کلاینت منتقل کنی
 
 ### روش 2: ساخت دستی
+
+اگه می‌خوای خودت دستی بسازی:
 
 ```bash
 # ساخت پوشه بسته
@@ -65,25 +72,27 @@ tar -czf paqet-offline-installer.tar.gz paqet-offline-installer/
 
 ## 📥 انتقال به سرور بدون اینترنت
 
-### روش 1: SCP
+### روش 1: SCP (توصیه می‌شه!)
+
 ```bash
-scp paqet-offline-installer-*.tar.gz user@server:/tmp/
+scp paqet-client-offline-*.tar user@server:/tmp/
 ```
 
-### روش 2: USB/SD Card
+### روش 2: با ابزارهایی مثل WinSCP
+
+اگه از Windows استفاده می‌کنی، می‌تونی از WinSCP استفاده کنی:
+1. WinSCP رو باز کن
+2. به سرور کلاینت متصل شو
+3. فایل tar رو به `/tmp/` بکش
+
+### روش 3: USB/SD Card
+
 ```bash
 # کپی فایل به USB
-cp paqet-offline-installer-*.tar.gz /media/usb/
+cp paqet-client-offline-*.tar /media/usb/
 
 # روی سرور
-cp /media/usb/paqet-offline-installer-*.tar.gz /tmp/
-```
-
-### روش 3: از طریق سرور میانی
-```bash
-# روی سرور میانی
-scp paqet-offline-installer-*.tar.gz intermediate-server:/tmp/
-# سپس از سرور میانی به سرور نهایی
+cp /media/usb/paqet-client-offline-*.tar /tmp/
 ```
 
 ## 🚀 نصب روی سرور بدون اینترنت
@@ -92,26 +101,11 @@ scp paqet-offline-installer-*.tar.gz intermediate-server:/tmp/
 
 ```bash
 cd /tmp
-tar -xzf paqet-offline-installer-*.tar.gz
-cd paqet-offline-installer-*
+tar -xf paqet-client-offline-*.tar
+cd paqet-client-offline-*
 ```
 
-### مرحله 2: نصب Paqet
-
-```bash
-# اگر اسکریپت install_offline.sh موجود باشه
-chmod +x install_offline.sh
-./install_offline.sh
-
-# یا دستی:
-cd binaries
-tar -xzf paqet-linux-amd64-*.tar.gz
-mv paqet_linux_amd64 ../paqet
-chmod +x ../paqet
-cd ..
-```
-
-### مرحله 3: راه‌اندازی
+### مرحله 2: راه‌اندازی
 
 ```bash
 # استفاده از اسکریپت راه‌اندازی
@@ -123,6 +117,11 @@ chmod +x setup_fa.sh
 ./setup_fa.sh
 ```
 
+اسکریپت خودش همه چیز رو انجام می‌ده:
+- فایل paqet رو پیدا می‌کنه یا از بسته استفاده می‌کنه
+- کانفیگ رو می‌سازه
+- قوانین iptables رو اعمال می‌کنه
+
 ## 📋 چک‌لیست فایل‌های مورد نیاز
 
 قبل از انتقال به سرور بدون اینترنت، مطمئن شو که این فایل‌ها موجود هستند:
@@ -133,15 +132,14 @@ chmod +x setup_fa.sh
 - [ ] `config_server.yaml`
 - [ ] `config_client.yaml`
 - [ ] `iptables_rules.sh`
-- [ ] `binaries/paqet-linux-amd64-*.tar.gz` (حداقل این یکی)
-- [ ] `binaries/paqet-linux-arm64-*.tar.gz` (اگر سرور ARM64 دارید)
+- [ ] `paqet` (باینری paqet)
 
 ## ⚠️ نکات مهم
 
-1. **حداقل فایل‌های باینری**: حداقل فایل باینری برای سیستم عامل سرور خودتون رو داشته باشید
-2. **دسترسی root**: برای اجرای paqet نیاز به sudo دارید
+1. **حداقل فایل‌های باینری**: حداقل فایل باینری برای سیستم عامل سرور خودت رو داشته باش
+2. **دسترسی root**: برای اجرای paqet نیاز به sudo داری
 3. **iptables**: روی سرور باید قوانین iptables اعمال بشن
-4. **کلید رمزنگاری**: کلید تولید شده رو با سرور دیگه به اشتراک بذارید
+4. **کلید رمزنگاری**: کلید تولید شده رو با سرور دیگه به اشتراک بذار
 
 ## 🔍 عیب‌یابی
 
@@ -149,9 +147,9 @@ chmod +x setup_fa.sh
 
 ```bash
 # چک کردن فایل‌های موجود
-ls -lh binaries/
+ls -lh
 
-# اگر فایل موجود نیست، از سرور با اینترنت دانلود کن و اضافه کن
+# اگه فایل paqet موجود نیست، از سرور با اینترنت دانلود کن و اضافه کن
 ```
 
 ### مشکل: دسترسی اجرا نداره
@@ -170,3 +168,7 @@ bash -n setup_fa.sh
 # اجرای با debug
 bash -x setup_fa.sh
 ```
+
+---
+
+**نکته:** بهترین روش اینه که از اسکریپت تعاملی استفاده کنی. وقتی روی سرور اصلی (با اینترنت) هستی و می‌خوای بسته Offline بسازی، اسکریپت خودش همه چیز رو انجام می‌ده!
