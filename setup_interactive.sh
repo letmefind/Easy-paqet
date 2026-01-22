@@ -394,10 +394,134 @@ else
         
         if [[ "$DOWNLOAD" != "n" && "$DOWNLOAD" != "N" ]]; then
             msg "در حال دانلود paqet..." "Downloading paqet..."
-            wget https://github.com/hanselime/paqet/releases/latest/download/paqet-linux-amd64 -O paqet
-            chmod +x paqet
-            PAQET_CMD="./paqet"
-            msg "✓ Paqet دانلود شد" "✓ Paqet downloaded"
+            
+            # استفاده از GitHub API برای پیدا کردن آخرین release و فایل‌های موجود
+            if command -v curl &> /dev/null; then
+                msg "   در حال بررسی آخرین release..." "   Checking latest release..."
+                RELEASE_INFO=$(curl -s https://api.github.com/repos/hanselime/paqet/releases/latest)
+                LATEST_RELEASE=$(echo "$RELEASE_INFO" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+                
+                if [ -n "$LATEST_RELEASE" ]; then
+                    msg "   آخرین نسخه پیدا شد: $LATEST_RELEASE" "   Latest version found: $LATEST_RELEASE"
+                    
+                    # اول فرمت صحیح رو امتحان کن: paqet-linux-amd64-${LATEST_RELEASE}.tar.gz
+                    CORRECT_FILENAME="paqet-linux-amd64-${LATEST_RELEASE}.tar.gz"
+                    DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${CORRECT_FILENAME}"
+                    msg "   امتحان فرمت صحیح: $CORRECT_FILENAME..." "   Trying correct format: $CORRECT_FILENAME..."
+                    
+                    DOWNLOAD_SUCCESS=false
+                    if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
+                        TEMP_FILE=$(mktemp)
+                        wget "$DOWNLOAD_URL" -O "$TEMP_FILE" 2>/dev/null
+                        
+                        if [ $? -eq 0 ] && [ -f "$TEMP_FILE" ]; then
+                            msg "   در حال استخراج از tar.gz..." "   Extracting from tar.gz..."
+                            tar -xzf "$TEMP_FILE" -C . 2>/dev/null
+                            rm "$TEMP_FILE"
+                            # پیدا کردن فایل paqet استخراج شده
+                            if [ -f "./paqet" ]; then
+                                chmod +x paqet
+                                PAQET_CMD="./paqet"
+                                msg "✓ Paqet دانلود و استخراج شد ($CORRECT_FILENAME)" "✓ Paqet downloaded and extracted ($CORRECT_FILENAME)"
+                                DOWNLOAD_SUCCESS=true
+                            fi
+                        fi
+                    fi
+                    
+                    # اگر پیدا نشد، فایل‌های واقعی موجود در release رو امتحان کن
+                    if [ "$DOWNLOAD_SUCCESS" == false ]; then
+                        ASSET_NAMES=$(echo "$RELEASE_INFO" | python3 -c "import sys, json; data=json.load(sys.stdin); print('\n'.join([a['name'] for a in data.get('assets', []) if 'linux' in a['name'].lower() and 'amd64' in a['name'].lower()]))" 2>/dev/null || echo "$RELEASE_INFO" | grep '"name":' | grep -i 'linux.*amd64\|amd64.*linux' | sed -E 's/.*"name":\s*"([^"]+)".*/\1/')
+                        
+                        if [ -n "$ASSET_NAMES" ]; then
+                            for ASSET_NAME in $ASSET_NAMES; do
+                                DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${ASSET_NAME}"
+                                msg "   امتحان فایل واقعی: $ASSET_NAME..." "   Trying actual file: $ASSET_NAME..."
+                                
+                                if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
+                                    TEMP_FILE=$(mktemp)
+                                    wget "$DOWNLOAD_URL" -O "$TEMP_FILE" 2>/dev/null
+                                    
+                                    if [ $? -eq 0 ] && [ -f "$TEMP_FILE" ]; then
+                                        if [[ "$ASSET_NAME" == *.tar.gz ]] || [[ "$ASSET_NAME" == *.tgz ]]; then
+                                            msg "   در حال استخراج از tar.gz..." "   Extracting from tar.gz..."
+                                            tar -xzf "$TEMP_FILE" -C . 2>/dev/null
+                                            rm "$TEMP_FILE"
+                                            if [ -f "./paqet" ]; then
+                                                chmod +x paqet
+                                                PAQET_CMD="./paqet"
+                                                msg "✓ Paqet دانلود و استخراج شد ($ASSET_NAME)" "✓ Paqet downloaded and extracted ($ASSET_NAME)"
+                                                DOWNLOAD_SUCCESS=true
+                                                break
+                                            fi
+                                        elif [[ "$ASSET_NAME" == *.zip ]]; then
+                                            msg "   در حال استخراج از zip..." "   Extracting from zip..."
+                                            unzip -q "$TEMP_FILE" -d . 2>/dev/null
+                                            rm "$TEMP_FILE"
+                                            if [ -f "./paqet" ]; then
+                                                chmod +x paqet
+                                                PAQET_CMD="./paqet"
+                                                msg "✓ Paqet دانلود و استخراج شد ($ASSET_NAME)" "✓ Paqet downloaded and extracted ($ASSET_NAME)"
+                                                DOWNLOAD_SUCCESS=true
+                                                break
+                                            fi
+                                        else
+                                            mv "$TEMP_FILE" paqet
+                                            chmod +x paqet
+                                            PAQET_CMD="./paqet"
+                                            msg "✓ Paqet دانلود شد ($ASSET_NAME)" "✓ Paqet downloaded ($ASSET_NAME)"
+                                            DOWNLOAD_SUCCESS=true
+                                            break
+                                        fi
+                                    fi
+                                fi
+                            done
+                        fi
+                    fi
+                    
+                    if [ "$DOWNLOAD_SUCCESS" == false ]; then
+                        echo ""
+                        msg "⚠️  دانلود خودکار موفق نشد!" "⚠️  Automatic download failed!"
+                        echo ""
+                        msg "لطفاً دستی از لینک زیر دانلود کن:" "Please download manually from:"
+                        echo "   https://github.com/hanselime/paqet/releases/tag/${LATEST_RELEASE}"
+                        echo ""
+                        msg "یا از دستور زیر استفاده کن (نام فایل رو از صفحه release پیدا کن):" "Or use this command (find the filename on the release page):"
+                        echo "   wget https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/[نام-فایل] -O paqet"
+                        echo ""
+                        MANUAL_DOWNLOAD=$(msg_prompt "آیا فایل رو دستی دانلود کردی و در همین مسیر هست؟ [Y/n]" "Did you download the file manually and is it in this directory? [Y/n]")
+                        if [[ "$MANUAL_DOWNLOAD" != "n" && "$MANUAL_DOWNLOAD" != "N" ]]; then
+                            if [ -f "./paqet" ]; then
+                                chmod +x paqet
+                                PAQET_CMD="./paqet"
+                                msg "✓ فایل paqet پیدا شد" "✓ Paqet file found"
+                            else
+                                PAQET_CMD="paqet"
+                            fi
+                        else
+                            PAQET_CMD="paqet"
+                        fi
+                    fi
+                else
+                    msg "⚠️  نتوانست آخرین release رو پیدا کنه" "⚠️  Could not find latest release"
+                    msg "لطفاً دستی دانلود کن: https://github.com/hanselime/paqet/releases" "Please download manually: https://github.com/hanselime/paqet/releases"
+                    PAQET_CMD="paqet"
+                fi
+            else
+                # اگر curl موجود نبود، از روش ساده استفاده کن
+                msg "⚠️  curl پیدا نشد، استفاده از روش ساده..." "⚠️  curl not found, using simple method..."
+                wget https://github.com/hanselime/paqet/releases/latest/download/paqet-linux-amd64 -O paqet 2>&1
+                if [ $? -eq 0 ] && [ -f "./paqet" ]; then
+                    chmod +x paqet
+                    PAQET_CMD="./paqet"
+                    msg "✓ Paqet دانلود شد" "✓ Paqet downloaded"
+                else
+                    echo ""
+                    msg "❌ دانلود موفق نشد!" "❌ Download failed!"
+                    msg "لطفاً دستی از لینک زیر دانلود کن:" "Please download manually from:"
+                    echo "   https://github.com/hanselime/paqet/releases/latest"
+                    PAQET_CMD="paqet"
+                fi
+            fi
         else
             PAQET_CMD="paqet"
         fi
