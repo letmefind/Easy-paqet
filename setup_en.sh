@@ -338,27 +338,43 @@ if [ "$ROLE" == "server" ]; then
         # Find paqet path
         PAQET_PATH=$(readlink -f "$PAQET_CMD" 2>/dev/null || realpath "$PAQET_CMD" 2>/dev/null || echo "$(pwd)/$PAQET_CMD")
         
+        # Get current script directory (where setup scripts are)
+        CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        
         # Create temporary script
-        cat > /tmp/create_client_package_temp.sh <<'TEMP_EOF'
+        cat > /tmp/create_client_package_temp.sh <<TEMP_EOF
 #!/bin/bash
-SECRET_KEY="$1"
-PAQET_BINARY="$2"
+SECRET_KEY="\$1"
+PAQET_BINARY="\$2"
+SCRIPT_DIR="\$3"
 PACKAGE_NAME="paqet-client-offline"
-TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-PACKAGE_DIR="${PACKAGE_NAME}-${TIMESTAMP}"
-ARCHIVE_NAME="${PACKAGE_NAME}-${TIMESTAMP}.tar"
+TIMESTAMP=\$(date +%Y%m%d-%H%M%S)
+PACKAGE_DIR="\${PACKAGE_NAME}-\${TIMESTAMP}"
+ARCHIVE_NAME="\${PACKAGE_NAME}-\${TIMESTAMP}.tar"
 
-rm -rf "$PACKAGE_DIR"
-mkdir -p "$PACKAGE_DIR"
+rm -rf "\$PACKAGE_DIR"
+mkdir -p "\$PACKAGE_DIR"
 
 echo "📦 Collecting files..."
 
-# Copy scripts
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cp "$SCRIPT_DIR/setup.sh" "$PACKAGE_DIR/" 2>/dev/null || true
-cp "$SCRIPT_DIR/setup_fa.sh" "$PACKAGE_DIR/" 2>/dev/null || true
-cp "$SCRIPT_DIR/setup_en.sh" "$PACKAGE_DIR/" 2>/dev/null || true
-cp "$SCRIPT_DIR/config_client.yaml" "$PACKAGE_DIR/" 2>/dev/null || true
+# Copy scripts from the original directory
+if [ -f "\$SCRIPT_DIR/setup.sh" ]; then
+    cp "\$SCRIPT_DIR/setup.sh" "\$PACKAGE_DIR/" 2>/dev/null || true
+    echo "✓ setup.sh copied"
+fi
+if [ -f "\$SCRIPT_DIR/setup_fa.sh" ]; then
+    cp "\$SCRIPT_DIR/setup_fa.sh" "\$PACKAGE_DIR/" 2>/dev/null || true
+    echo "✓ setup_fa.sh copied"
+fi
+if [ -f "\$SCRIPT_DIR/setup_en.sh" ]; then
+    cp "\$SCRIPT_DIR/setup_en.sh" "\$PACKAGE_DIR/" 2>/dev/null || true
+    echo "✓ setup_en.sh copied"
+fi
+if [ -f "\$SCRIPT_DIR/config_client.yaml" ]; then
+    cp "\$SCRIPT_DIR/config_client.yaml" "\$PACKAGE_DIR/" 2>/dev/null || true
+    echo "✓ config_client.yaml copied"
+fi
+TEMP_EOF
 
 # Copy paqet
 if [ -f "$PAQET_BINARY" ]; then
@@ -421,8 +437,8 @@ TEMP_EOF
 
         chmod +x /tmp/create_client_package_temp.sh
         
-        # Execute script
-        bash /tmp/create_client_package_temp.sh "$SECRET_KEY" "$PAQET_PATH"
+        # Execute script with current directory as third parameter
+        bash /tmp/create_client_package_temp.sh "$SECRET_KEY" "$PAQET_PATH" "$CURRENT_DIR"
         
         CLIENT_PACKAGE=$(ls -t paqet-client-offline-*.tar 2>/dev/null | head -1)
         if [ -n "$CLIENT_PACKAGE" ]; then
