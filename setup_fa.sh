@@ -91,19 +91,69 @@ fi
 # پیدا کردن MAC روتر
 GATEWAY_IP=$(ip route | grep default | awk '{print $3}' | head -1)
 if [ -n "$GATEWAY_IP" ]; then
-    echo "🔹 Gateway IP پیدا شد: $GATEWAY_IP"
+    echo "🔹 Gateway IP از routing table: $GATEWAY_IP"
+    
+    # چک کردن که آیا Gateway IP یک IP خصوصی/داخلی هست
+    if [[ "$GATEWAY_IP" =~ ^172\.(1[6-9]|2[0-9]|3[0-1])\.[0-9]+\.[0-9]+$ ]] || \
+       [[ "$GATEWAY_IP" =~ ^10\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || \
+       [[ "$GATEWAY_IP" =~ ^192\.168\.[0-9]+\.[0-9]+$ ]]; then
+        echo "   ⚠️  این یک IP خصوصی/داخلی است (معمولاً در سرورهای cloud درسته)"
+        echo "   این IP برای پیدا کردن MAC address استفاده می‌شه، نه برای routing"
+    fi
+    
+    # پیدا کردن MAC address از ARP table
     ROUTER_MAC=$(arp -n $GATEWAY_IP 2>/dev/null | grep -oP '([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}' | head -1)
+    
+    # اگر MAC پیدا نشد، سعی کن با ping پیدا کنی
+    if [ -z "$ROUTER_MAC" ]; then
+        echo "   در حال ping کردن Gateway برای پیدا کردن MAC..."
+        ping -c 1 -W 1 $GATEWAY_IP > /dev/null 2>&1
+        sleep 1
+        ROUTER_MAC=$(arp -n $GATEWAY_IP 2>/dev/null | grep -oP '([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}' | head -1)
+    fi
+    
     if [ -n "$ROUTER_MAC" ]; then
         echo "🔹 MAC آدرس روتر پیدا شد: $ROUTER_MAC"
+        echo ""
+        echo "   📝 نکته: این MAC address برای ارسال پکت‌ها استفاده می‌شه."
+        echo "   در سرورهای cloud، Gateway IP ممکنه یک IP داخلی باشه که درست است."
+        echo ""
         read -p "آیا این MAC آدرس درست است؟ [Y/n]: " CONFIRM
         if [[ "$CONFIRM" == "n" || "$CONFIRM" == "N" ]]; then
             read -p "MAC آدرس روتر را وارد کن (مثلا aa:bb:cc:dd:ee:ff): " ROUTER_MAC
         fi
     else
+        echo "⚠️  MAC آدرس روتر پیدا نشد"
+        echo ""
+        echo "   برای پیدا کردن MAC address، می‌تونی از دستور زیر استفاده کنی:"
+        echo "   arp -n $GATEWAY_IP"
+        echo "   یا"
+        echo "   ip neigh show $GATEWAY_IP"
+        echo ""
         read -p "MAC آدرس روتر را وارد کن (مثلا aa:bb:cc:dd:ee:ff): " ROUTER_MAC
     fi
 else
-    read -p "MAC آدرس روتر را وارد کن (مثلا aa:bb:cc:dd:ee:ff): " ROUTER_MAC
+    echo "⚠️  Gateway IP پیدا نشد"
+    echo ""
+    echo "   برای پیدا کردن Gateway IP، می‌تونی از دستور زیر استفاده کنی:"
+    echo "   ip route | grep default"
+    echo ""
+    read -p "Gateway IP را وارد کن (یا Enter برای رد کردن): " GATEWAY_IP
+    if [ -n "$GATEWAY_IP" ]; then
+        ROUTER_MAC=$(arp -n $GATEWAY_IP 2>/dev/null | grep -oP '([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}' | head -1)
+        if [ -z "$ROUTER_MAC" ]; then
+            ping -c 1 -W 1 $GATEWAY_IP > /dev/null 2>&1
+            sleep 1
+            ROUTER_MAC=$(arp -n $GATEWAY_IP 2>/dev/null | grep -oP '([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}' | head -1)
+        fi
+        if [ -n "$ROUTER_MAC" ]; then
+            echo "✓ MAC آدرس پیدا شد: $ROUTER_MAC"
+        else
+            read -p "MAC آدرس روتر را وارد کن (مثلا aa:bb:cc:dd:ee:ff): " ROUTER_MAC
+        fi
+    else
+        read -p "MAC آدرس روتر را مستقیماً وارد کن (مثلا aa:bb:cc:dd:ee:ff): " ROUTER_MAC
+    fi
 fi
 
 echo ""
