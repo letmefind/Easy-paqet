@@ -17,10 +17,10 @@ echo "  1) English"
 echo "  2) فارسی (Persian)"
 read -p "Choose [1/2]: " lang_choice
 
-if [[ "$lang_choice" == "2" ]]; then
-    LANG="fa"
-else
+if [[ "$lang_choice" == "1" ]]; then
     LANG="en"
+else
+    LANG="fa"
 fi
 
 # توابع نمایش پیام / Message display functions
