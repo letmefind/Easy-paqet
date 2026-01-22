@@ -15,6 +15,9 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "📋 Paqet Interactive Setup"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
+echo "💡 Recommendation: It's better to set up the Client server (A) first"
+echo "   Then install the Server (B) and create an offline package for the client"
+echo ""
 
 # Server type detection
 read -p "🔹 Is this server Client (A) or Server (B)? [A/B]: " SERVER_TYPE
