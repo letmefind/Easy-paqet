@@ -336,9 +336,13 @@ if [ "$ROLE" == "server" ]; then
         echo "در حال ساخت بسته Offline..."
         
         # بررسی وجود paqet، اگر نیست ابتدا دانلود کن
-        if [ -z "$PAQET_CMD" ] || [ "$PAQET_CMD" == "paqet" ]; then
-            if ! command -v paqet &> /dev/null && [ ! -f "./paqet" ]; then
-                echo "⚠️  باینری Paqet پیدا نشد. در حال دانلود..."
+        # ابتدا بررسی کن که آیا paqet در مسیر فعلی یا PATH وجود دارد
+        if [ -f "./paqet" ]; then
+            PAQET_CMD="./paqet"
+        elif command -v paqet &> /dev/null; then
+            PAQET_CMD="paqet"
+        elif [ -z "$PAQET_CMD" ] || [ "$PAQET_CMD" == "paqet" ]; then
+            echo "⚠️  باینری Paqet پیدا نشد. در حال دانلود..."
                 
                 # تشخیص سیستم عامل و معماری
                 OS=""

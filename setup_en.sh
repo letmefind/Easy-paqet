@@ -336,9 +336,13 @@ if [ "$ROLE" == "server" ]; then
         echo "Creating offline package..."
         
         # Check if paqet exists, if not download it first
-        if [ -z "$PAQET_CMD" ] || [ "$PAQET_CMD" == "paqet" ]; then
-            if ! command -v paqet &> /dev/null && [ ! -f "./paqet" ]; then
-                echo "⚠️  Paqet binary not found. Downloading it first..."
+        # First, check if paqet exists in current directory or PATH
+        if [ -f "./paqet" ]; then
+            PAQET_CMD="./paqet"
+        elif command -v paqet &> /dev/null; then
+            PAQET_CMD="paqet"
+        elif [ -z "$PAQET_CMD" ] || [ "$PAQET_CMD" == "paqet" ]; then
+            echo "⚠️  Paqet binary not found. Downloading it first..."
                 
                 # Detect operating system and architecture
                 OS=""
