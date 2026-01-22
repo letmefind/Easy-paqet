@@ -1007,4 +1007,3 @@ EOF
         sleep 2
         sudo systemctl status ${SERVICE_NAME} --no-pager -l
     fi
-fi
