@@ -1,34 +1,58 @@
 # کانفیگ سرور (سرور B)
 # این فایل روی سرور B اجرا می‌شود و نقش سرور اصلی را دارد
 
+# نقش باید به صراحت تعیین شود
+role: "server"
+
+# تنظیمات لاگ
+log:
+  level: "info"  # none, debug, info, warn, error, fatal
+
+# تنظیمات گوش دادن سرور
+listen:
+  addr: ":9999"  # CHANGE ME: پورت گوش دادن سرور (باید با network.local_addr یکسان باشه)
+
 # تنظیمات شبکه
 network:
-  interface: "eth0"  # نام اینترفیس شبکه سرور B را اینجا بذار
-  gateway_mac: "00:00:00:00:00:00"  # MAC آدرس روتر سرور B را اینجا بذار
+  interface: "eth0"  # CHANGE ME: نام اینترفیس شبکه سرور B را اینجا بذار (مثلا eth0, ens3, en0)
+  local_addr: "YOUR_SERVER_B_IP:9999"  # CHANGE ME: آی‌پی سرور B و پورت (باید با listen.addr یکسان باشه)
+  router_mac: "00:00:00:00:00:00"  # CHANGE ME: MAC آدرس روتر سرور B را اینجا بذار
+  
+  # تنظیمات PCAP (اختیاری - مقادیر پیش‌فرض استفاده می‌شه)
+  pcap:
+    sockbuf: 8388608  # 8MB buffer (پیش‌فرض برای سرور)
+  
+  # پرچم‌های TCP برای ساخت پکت (اختیاری)
+  tcp:
+    local_flag: ["PA"]   # پرچم‌های TCP محلی (Push+Ack پیش‌فرض)
 
-# تنظیمات KCP (پروتکل انتقال سریع و قابل اعتماد)
-kcp:
-  # سرور روی این آدرس گوش می‌ده
-  listen: "0.0.0.0:9999"  # روی همه اینترفیس‌ها و پورت 9999
-  # کلید رمزنگاری مشترک (باید با کلاینت یکسان باشه)
-  secret: "AY9Frl1VHWJB01lmKqLgE6dJllLhF3Sn4Lw/6BrcyYY="
-  # تنظیمات KCP برای عملکرد بهتر
-  mode: "fast3"  # حالت fast3 برای سرعت بالا
-  mtu: 1350
-  sndwnd: 1024
-  rcvwnd: 1024
-  datashard: 10
-  parityshard: 3
-  nodelay: 1
-  interval: 10
-  resend: 2
-  nc: 1
+# تنظیمات پروتکل انتقال
+transport:
+  protocol: "kcp"  # پروتکل انتقال (فعلا فقط kcp پشتیبانی می‌شه)
+  conn: 1          # تعداد اتصالات (1-256، پیش‌فرض: 1)
+  
+  # تنظیمات KCP
+  kcp:
+    mode: "fast3"           # حالت KCP: normal, fast, fast2, fast3 (fast3 برای سرعت بالا)
+    mtu: 1350               # حداکثر واحد انتقال (50-1500)
+    rcvwnd: 1024            # اندازه پنجره دریافت (پیش‌فرض برای سرور)
+    sndwnd: 1024            # اندازه پنجره ارسال (پیش‌فرض برای سرور)
+    
+    # تنظیمات رمزنگاری
+    block: "aes"                    # الگوریتم رمزنگاری: none, aes, blowfish, cast5, sm4, salsa20
+    key: "AY9Frl1VHWJB01lmKqLgE6dJllLhF3Sn4Lw/6BrcyYY="  # CHANGE ME: کلید مشترک (باید با کلاینت یکسان باشه)
+    
+    # تنظیمات بافر (اختیاری)
+    smuxbuf: 4194304       # 4MB SMUX buffer
+    streambuf: 2097152     # 2MB stream buffer
 
-# Forwarding - ترافیک رو به کجا بفرسته
-forward:
-  # ترافیک دریافتی رو به localhost و پورت دلخواهت می‌فرسته
-  target: "127.0.0.1:8080"  # پورت دلخواهت رو اینجا بذار (مثلا 8080, 3000, و غیره)
-
-# لاگ‌گیری (اختیاری)
-log:
-  level: "info"  # می‌تونی info, debug, warn, error بذاری
+# نکته مهم: تنظیمات فایروال سرور الزامی است!
+# 
+# چون paqet از pcap استفاده می‌کنه تا فایروال‌های استاندارد رو دور بزنه، باید
+# iptables رو روی سرور تنظیم کنی تا جلوی دخالت کرنل رو بگیری:
+#
+# sudo iptables -t raw -A PREROUTING -p tcp --dport 9999 -j NOTRACK
+# sudo iptables -t raw -A OUTPUT -p tcp --sport 9999 -j NOTRACK
+# sudo iptables -t mangle -A OUTPUT -p tcp --sport 9999 --tcp-flags RST RST -j DROP
+#
+# پورت 9999 رو با پورت واقعی listen خودت جایگزین کن.

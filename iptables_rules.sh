@@ -2,13 +2,22 @@
 # دستورات iptables برای سرور B
 # این اسکریپت جلوی ارسال پکت‌های RST توسط سیستم‌عامل رو می‌گیره
 
-echo "در حال اعمال قوانین iptables برای جلوگیری از RST packets..."
+PORT=9999  # پورت listen سرور (اگه تغییر دادی، اینجا هم تغییر بده)
 
-# جلوگیری از ارسال پکت‌های RST در OUTPUT chain
-sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP
+echo "در حال اعمال قوانین iptables برای جلوگیری از RST packets روی پورت $PORT..."
 
-# جلوگیری از ارسال پکت‌های RST در FORWARD chain (اگر از forwarding استفاده می‌کنی)
-sudo iptables -A FORWARD -p tcp --tcp-flags RST RST -j DROP
+# 1. دور زدن connection tracking (conntrack) برای پورت اتصال - این خیلی مهمه!
+# این به کرنل می‌گه که پکت‌های این پورت رو برای state tracking نادیده بگیره
+sudo iptables -t raw -A PREROUTING -p tcp --dport $PORT -j NOTRACK
+sudo iptables -t raw -A OUTPUT -p tcp --sport $PORT -j NOTRACK
+
+# 2. جلوگیری از ارسال پکت‌های TCP RST که می‌تونن session رو kill کنن
+# این هر پکت RST که کرنل می‌خواد از پورت اتصال بفرسته رو drop می‌کنه
+sudo iptables -t mangle -A OUTPUT -p tcp --sport $PORT --tcp-flags RST RST -j DROP
+
+# جایگزین برای قانون 2 اگه مشکل ادامه داشت:
+sudo iptables -t filter -A INPUT -p tcp --dport $PORT -j ACCEPT
+sudo iptables -t filter -A OUTPUT -p tcp --sport $PORT -j ACCEPT
 
 # ذخیره تنظیمات iptables (برای سیستم‌های مبتنی بر Debian/Ubuntu)
 if command -v iptables-save &> /dev/null; then
@@ -27,3 +36,5 @@ echo "✓ قوانین iptables با موفقیت اعمال شدند!"
 echo ""
 echo "برای بررسی قوانین اعمال شده، دستور زیر رو اجرا کن:"
 echo "sudo iptables -L -n -v"
+echo "sudo iptables -t raw -L -n -v"
+echo "sudo iptables -t mangle -L -n -v"

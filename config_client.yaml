@@ -1,35 +1,54 @@
 # کانفیگ کلاینت (سرور A)
 # این فایل روی سرور A اجرا می‌شود و نقش SOCKS5 Proxy را دارد
 
+# نقش باید به صراحت تعیین شود
+role: "client"
+
+# تنظیمات لاگ
+log:
+  level: "info"  # none, debug, info, warn, error, fatal
+
+# SOCKS5 Proxy - اینجا کاربران بهت وصل می‌شن
+socks5:
+  - listen: "127.0.0.1:1080"  # روی localhost و پورت 1080 گوش می‌ده
+    username: ""               # اختیاری: نام کاربری برای احراز هویت
+    password: ""               # اختیاری: رمز عبور برای احراز هویت
+
 # تنظیمات شبکه
 network:
-  interface: "eth0"  # نام اینترفیس شبکه سرور A را اینجا بذار
-  gateway_mac: "00:00:00:00:00:00"  # MAC آدرس روتر سرور A را اینجا بذار
+  interface: "eth0"  # CHANGE ME: نام اینترفیس شبکه سرور A را اینجا بذار (مثلا eth0, ens3, en0)
+  local_addr: "YOUR_SERVER_A_IP:0"  # CHANGE ME: آی‌پی سرور A (پورت 0 برای انتخاب خودکار)
+  router_mac: "00:00:00:00:00:00"  # CHANGE ME: MAC آدرس روتر سرور A را اینجا بذار
+  
+  # تنظیمات PCAP (اختیاری - مقادیر پیش‌فرض استفاده می‌شه)
+  pcap:
+    sockbuf: 4194304  # 4MB buffer (پیش‌فرض برای کلاینت)
+  
+  # پرچم‌های TCP برای ساخت پکت (اختیاری)
+  tcp:
+    local_flag: ["PA"]   # پرچم‌های TCP محلی (Push+Ack پیش‌فرض)
+    remote_flag: ["PA"]  # پرچم‌های TCP ریموت (Push+Ack پیش‌فرض)
 
-# تنظیمات KCP (پروتکل انتقال سریع و قابل اعتماد)
-kcp:
-  # آدرس سرور B که می‌خوای بهش وصل بشی
-  remote_addr: "YOUR_SERVER_B_IP:9999"  # آی‌پی سرور B را اینجا بذار
-  # کلید رمزنگاری مشترک (باید با سرور B یکسان باشه)
-  secret: "AY9Frl1VHWJB01lmKqLgE6dJllLhF3Sn4Lw/6BrcyYY="
-  # تنظیمات KCP برای عملکرد بهتر
-  mode: "fast3"  # حالت fast3 برای سرعت بالا
-  mtu: 1350
-  sndwnd: 1024
-  rcvwnd: 1024
-  datashard: 10
-  parityshard: 3
-  nodelay: 1
-  interval: 10
-  resend: 2
-  nc: 1
+# تنظیمات اتصال به سرور
+server:
+  addr: "YOUR_SERVER_B_IP:9999"  # CHANGE ME: آی‌پی سرور B و پورت 9999
 
-# SOCKS5 Listener - اینجا کاربران بهت وصل می‌شن
-listeners:
-  - type: "socks5"
-    bind: "127.0.0.1:1080"  # روی localhost و پورت 1080 گوش می‌ده
-    # این پورت رو کاربرانت می‌تونن استفاده کنن
-
-# لاگ‌گیری (اختیاری)
-log:
-  level: "info"  # می‌تونی info, debug, warn, error بذاری
+# تنظیمات پروتکل انتقال
+transport:
+  protocol: "kcp"  # پروتکل انتقال (فعلا فقط kcp پشتیبانی می‌شه)
+  conn: 1          # تعداد اتصالات (1-256، پیش‌فرض: 1)
+  
+  # تنظیمات KCP
+  kcp:
+    mode: "fast3"           # حالت KCP: normal, fast, fast2, fast3 (fast3 برای سرعت بالا)
+    mtu: 1350               # حداکثر واحد انتقال (50-1500)
+    rcvwnd: 512             # اندازه پنجره دریافت (پیش‌فرض برای کلاینت)
+    sndwnd: 512             # اندازه پنجره ارسال (پیش‌فرض برای کلاینت)
+    
+    # تنظیمات رمزنگاری
+    block: "aes"                    # الگوریتم رمزنگاری: none, aes, blowfish, cast5, sm4, salsa20
+    key: "AY9Frl1VHWJB01lmKqLgE6dJllLhF3Sn4Lw/6BrcyYY="  # CHANGE ME: کلید مشترک (باید با سرور یکسان باشه)
+    
+    # تنظیمات بافر (اختیاری)
+    smuxbuf: 4194304       # 4MB SMUX buffer
+    streambuf: 2097152     # 2MB stream buffer
