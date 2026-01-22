@@ -275,8 +275,9 @@ socks5:
 
 network:
   interface: "$INTERFACE"
-  local_addr: "$LOCAL_IP:$LOCAL_PORT"
-  router_mac: "$ROUTER_MAC"
+  ipv4:
+    addr: "$LOCAL_IP:$LOCAL_PORT"
+    router_mac: "$ROUTER_MAC"
   
   pcap:
     sockbuf: 4194304
@@ -323,8 +324,9 @@ listen:
 
 network:
   interface: "$INTERFACE"
-  local_addr: "$LOCAL_IP:$LOCAL_PORT"
-  router_mac: "$ROUTER_MAC"
+  ipv4:
+    addr: "$LOCAL_IP:$LOCAL_PORT"
+    router_mac: "$ROUTER_MAC"
   
   pcap:
     sockbuf: 8388608

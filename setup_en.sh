@@ -240,8 +240,9 @@ socks5:
 
 network:
   interface: "$INTERFACE"
-  local_addr: "$LOCAL_IP:$LOCAL_PORT"
-  router_mac: "$ROUTER_MAC"
+  ipv4:
+    addr: "$LOCAL_IP:$LOCAL_PORT"
+    router_mac: "$ROUTER_MAC"
   
   pcap:
     sockbuf: 4194304
@@ -285,8 +286,9 @@ listen:
 
 network:
   interface: "$INTERFACE"
-  local_addr: "$LOCAL_IP:$LOCAL_PORT"
-  router_mac: "$ROUTER_MAC"
+  ipv4:
+    addr: "$LOCAL_IP:$LOCAL_PORT"
+    router_mac: "$ROUTER_MAC"
   
   pcap:
     sockbuf: 8388608
@@ -597,3 +599,64 @@ echo "$SECRET_KEY" > .paqet_secret_key.txt
 chmod 600 .paqet_secret_key.txt
 echo "💾 Encryption key saved to .paqet_secret_key.txt"
 echo "   ⚠️  Share this file with the other server!"
+
+# Ask about creating systemd service
+echo ""
+read -p "Do you want to install it as a systemd service? [Y/n]: " CREATE_SERVICE
+
+if [[ "$CREATE_SERVICE" != "n" && "$CREATE_SERVICE" != "N" ]]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "🔧 Creating systemd Service"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    
+    # Find paqet path
+    PAQET_PATH=$(readlink -f "$PAQET_CMD" 2>/dev/null || realpath "$PAQET_CMD" 2>/dev/null || echo "$(pwd)/$PAQET_CMD")
+    CONFIG_PATH=$(readlink -f "$CONFIG_FILE" 2>/dev/null || realpath "$CONFIG_FILE" 2>/dev/null || echo "$(pwd)/$CONFIG_FILE")
+    
+    # Service name
+    SERVICE_NAME="paqet-${ROLE}"
+    
+    # Create systemd service file
+    cat > /tmp/${SERVICE_NAME}.service <<EOF
+[Unit]
+Description=Paqet ${ROLE} service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=${PAQET_PATH} run -c ${CONFIG_PATH}
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    
+    echo "📄 Service file created: /tmp/${SERVICE_NAME}.service"
+    
+    # Copy to systemd
+    sudo cp /tmp/${SERVICE_NAME}.service /etc/systemd/system/
+    sudo systemctl daemon-reload
+    
+    echo "✓ systemd service installed"
+    echo ""
+    echo "Service management commands:"
+    echo "  Start:   sudo systemctl start ${SERVICE_NAME}"
+    echo "  Stop:    sudo systemctl stop ${SERVICE_NAME}"
+    echo "  Status:  sudo systemctl status ${SERVICE_NAME}"
+    echo "  Logs:    sudo journalctl -u ${SERVICE_NAME} -f"
+    echo "  Enable:  sudo systemctl enable ${SERVICE_NAME}"
+    echo ""
+    
+    read -p "Do you want to start the service now? [Y/n]: " START_SERVICE
+    if [[ "$START_SERVICE" != "n" && "$START_SERVICE" != "N" ]]; then
+        sudo systemctl start ${SERVICE_NAME}
+        sleep 2
+        sudo systemctl status ${SERVICE_NAME} --no-pager -l
+    fi
+fi
