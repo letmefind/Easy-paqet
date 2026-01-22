@@ -3,6 +3,350 @@
 [![Go Version](https://img.shields.io/badge/go-1.25+-blue.svg)](https://golang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+`paqet` یک پروکسی دوطرفه در سطح پکت است که با استفاده از raw sockets در Go ساخته شده است. این پروژه ترافیک را از یک کلاینت محلی به یک سرور ریموت منتقل می‌کند که سپس به سرویس‌های هدف متصل می‌شود. با کار در سطح پکت، کاملاً از پشته TCP/IP سیستم‌عامل میزبان عبور می‌کند و از KCP برای انتقال امن و قابل اعتماد استفاده می‌کند.
+
+> **⚠️ هشدار وضعیت توسعه**
+>
+> این پروژه در حال **توسعه فعال** است. APIها، فرمت‌های کانفیگ، مشخصات پروتکل و رابط‌های خط فرمان ممکن است بدون اطلاع تغییر کنند. انتظار تغییرات شکست‌آمیز بین نسخه‌ها را داشته باشید. در محیط‌های production با احتیاط استفاده کنید.
+
+---
+
+# راهنمای نصب و راه‌اندازی Paqet 🚀
+
+سلام! این راهنما بهت کمک می‌کنه که پروژه paqet رو روی دو سرور لینوکسی راه‌اندازی کنی. خیلی راحت و ساده!
+
+## 📋 چیزایی که نیاز داری:
+
+- دو سرور لینوکسی (سرور A و سرور B)
+- دسترسی root یا sudo
+- اینترنت برای دانلود فایل‌ها
+- `libpcap` development libraries (برای نصب: `sudo apt-get install libpcap-dev` در Debian/Ubuntu یا `sudo yum install libpcap-devel` در RHEL/CentOS)
+
+---
+
+## 🔧 مرحله ۱: نصب Paqet روی هر دو سرور
+
+### روی سرور A (کلاینت):
+
+```bash
+# دانلود آخرین نسخه paqet
+wget https://github.com/hanselime/paqet/releases/latest/download/paqet-linux-amd64 -O paqet
+
+# یا اگر نسخه خاصی می‌خوای:
+# wget https://github.com/hanselime/paqet/releases/download/v1.0.0/paqet-linux-amd64 -O paqet
+
+# دادن دسترسی اجرا
+chmod +x paqet
+
+# انتقال به مسیر مناسب (اختیاری)
+sudo mv paqet /usr/local/bin/
+```
+
+### روی سرور B (سرور):
+
+همون کارها رو انجام بده:
+
+```bash
+wget https://github.com/hanselime/paqet/releases/latest/download/paqet-linux-amd64 -O paqet
+chmod +x paqet
+sudo mv paqet /usr/local/bin/
+```
+
+---
+
+## ⚙️ مرحله ۲: تنظیم کانفیگ‌ها
+
+در این repository دو فایل کانفیگ آماده وجود داره که می‌تونی استفاده کنی:
+
+- `config_client.yaml` - برای سرور A (کلاینت)
+- `config_server.yaml` - برای سرور B (سرور)
+
+### روی سرور A:
+
+1. فایل `config_client.yaml` رو با ویرایشگر باز کن (مثلا nano یا vim):
+
+```bash
+nano config_client.yaml
+```
+
+2. این قسمت‌ها رو ویرایش کن:
+   - `network.interface`: نام اینترفیس شبکه‌ات (مثلا `eth0` یا `ens3`)
+   - `network.local_addr`: آی‌پی سرور A با پورت `0` (مثلا `192.168.1.100:0`)
+   - `network.router_mac`: MAC آدرس روترت (میتونی با `ip route | grep default` و سپس `arp -n <gateway_ip>` پیدا کنی)
+   - `server.addr`: آی‌پی سرور B و پورت (مثلا `203.0.113.10:9999`)
+
+### روی سرور B:
+
+1. فایل `config_server.yaml` رو باز کن:
+
+```bash
+nano config_server.yaml
+```
+
+2. این قسمت‌ها رو ویرایش کن:
+   - `network.interface`: نام اینترفیس شبکه‌ات
+   - `network.local_addr`: آی‌پی سرور B و پورت (مثلا `10.0.0.100:9999` - باید با `listen.addr` یکسان باشه)
+   - `network.router_mac`: MAC آدرس روترت
+   - `listen.addr`: پورت گوش دادن (مثلا `:9999`)
+
+**نکته مهم:** کلید رمزنگاری (`transport.kcp.key`) باید در هر دو فایل **دقیقاً یکسان** باشه!
+
+---
+
+## 🔥 مرحله ۳: اعمال قوانین iptables روی سرور B
+
+این کار خیلی مهمه! باید جلوی ارسال پکت‌های RST توسط کرنل رو بگیری.
+
+```bash
+# اجرای اسکریپت آماده
+chmod +x iptables_rules.sh
+sudo ./iptables_rules.sh
+```
+
+یا اگه می‌خوای دستی انجام بدی:
+
+```bash
+PORT=9999  # پورت listen سرور
+
+# 1. دور زدن connection tracking
+sudo iptables -t raw -A PREROUTING -p tcp --dport $PORT -j NOTRACK
+sudo iptables -t raw -A OUTPUT -p tcp --sport $PORT -j NOTRACK
+
+# 2. جلوگیری از ارسال پکت‌های RST
+sudo iptables -t mangle -A OUTPUT -p tcp --sport $PORT --tcp-flags RST RST -j DROP
+
+# ذخیره کردن (برای Debian/Ubuntu)
+sudo iptables-save | sudo tee /etc/iptables/rules.v4
+
+# یا برای RedHat/CentOS
+sudo service iptables save
+```
+
+---
+
+## 🚀 مرحله ۴: اجرای Paqet
+
+### روی سرور B (اول سرور رو اجرا کن):
+
+```bash
+# اجرای سرور
+sudo paqet run -c config_server.yaml
+
+# یا اگه در مسیر دیگه‌ای هستی:
+sudo /usr/local/bin/paqet run -c /path/to/config_server.yaml
+```
+
+### روی سرور A (بعد کلاینت رو اجرا کن):
+
+```bash
+# اجرای کلاینت
+sudo paqet run -c config_client.yaml
+
+# یا اگه در مسیر دیگه‌ای هستی:
+sudo /usr/local/bin/paqet run -c /path/to/config_client.yaml
+```
+
+**نکته:** اگه می‌خوای در پس‌زمینه اجرا بشه، از `screen` یا `tmux` استفاده کن:
+
+```bash
+# نصب screen (اگه نصب نیست)
+sudo apt install screen  # برای Debian/Ubuntu
+# یا
+sudo yum install screen  # برای CentOS/RHEL
+
+# اجرا در screen
+screen -S paqet
+sudo paqet run -c config_server.yaml
+
+# برای جدا شدن: Ctrl+A سپس D
+# برای برگشت: screen -r paqet
+```
+
+---
+
+## 🧪 مرحله ۵: تست کردن اتصال
+
+### تست ۱: بررسی اینکه SOCKS5 Proxy کار می‌کنه
+
+روی سرور A یا هر کامپیوتری که به سرور A دسترسی داره:
+
+```bash
+# تست با curl
+curl -x socks5://127.0.0.1:1080 http://httpbin.org/ip
+
+# یا تست با یک سایت دیگه
+curl -x socks5://127.0.0.1:1080 https://www.google.com
+```
+
+اگه جواب گرفت، یعنی همه چیز درسته! 🎉
+
+### تست ۲: استفاده از دستور ping
+
+```bash
+# روی کلاینت (سرور A)
+sudo paqet ping -c config_client.yaml
+```
+
+---
+
+## 🔍 عیب‌یابی (Troubleshooting)
+
+### مشکل: اتصال برقرار نمیشه
+
+1. **چک کن که فایروال پورت 9999 رو باز کرده باشه:**
+```bash
+# روی سرور B
+sudo ufw allow 9999/tcp  # برای ufw
+# یا
+sudo firewall-cmd --add-port=9999/tcp --permanent  # برای firewalld
+sudo firewall-cmd --reload
+```
+
+2. **چک کن که آی‌پی و پورت درست باشه:**
+```bash
+# روی سرور A
+ping YOUR_SERVER_B_IP
+telnet YOUR_SERVER_B_IP 9999
+```
+
+3. **چک کن که کلید رمزنگاری یکسان باشه** در هر دو فایل کانفیگ
+
+4. **چک کن که قوانین iptables اعمال شده باشن:**
+```bash
+sudo iptables -t raw -L -n -v
+sudo iptables -t mangle -L -n -v
+```
+
+### مشکل: پکت‌های RST ارسال می‌شن
+
+مطمئن شو که دستورات iptables رو درست اجرا کردی (مرحله ۳ رو دوباره چک کن).
+
+### مشکل: SOCKS5 Proxy پاسخ نمی‌ده
+
+1. چک کن که paqet روی سرور A در حال اجرا باشه
+2. چک کن که پورت 1080 باز باشه:
+```bash
+sudo netstat -tlnp | grep 1080
+# یا
+sudo ss -tlnp | grep 1080
+```
+
+---
+
+## 📝 نکات مهم
+
+- **همیشه اول سرور B رو اجرا کن، بعد سرور A**
+- **کلید رمزنگاری (`transport.kcp.key`) باید در هر دو فایل یکسان باشه**
+- **MAC آدرس روتر رو درست وارد کن** (اگه اشتباه باشه، کار نمی‌کنه)
+- **برای سرور، پورت `network.local_addr` و `listen.addr` باید یکسان باشه**
+- **برای کلاینت، از پورت `0` در `network.local_addr` استفاده کن** تا خودکار انتخاب بشه
+
+---
+
+## 🔄 اجرای دائمی با systemd (اختیاری)
+
+اگه می‌خوای paqet همیشه اجرا باشه و با راه‌اندازی مجدد سرور، خودکار شروع بشه:
+
+### روی سرور A:
+
+```bash
+sudo nano /etc/systemd/system/paqet-client.service
+```
+
+محتوای زیر رو بذار:
+
+```ini
+[Unit]
+Description=Paqet Client
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/paqet run -c /path/to/config_client.yaml
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+سپس:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable paqet-client
+sudo systemctl start paqet-client
+```
+
+### روی سرور B:
+
+همون کار رو انجام بده، فقط اسم سرویس رو `paqet-server` بذار و مسیر کانفیگ رو تغییر بده.
+
+---
+
+## 🎯 خلاصه دستورات سریع
+
+```bash
+# نصب
+wget https://github.com/hanselime/paqet/releases/latest/download/paqet-linux-amd64 -O paqet
+chmod +x paqet
+sudo mv paqet /usr/local/bin/
+
+# ویرایش کانفیگ
+nano config_client.yaml  # روی سرور A
+nano config_server.yaml  # روی سرور B
+
+# اعمال iptables (روی سرور B)
+sudo ./iptables_rules.sh
+
+# اجرا
+sudo paqet run -c config_server.yaml  # روی سرور B
+sudo paqet run -c config_client.yaml  # روی سرور A
+
+# تست
+curl -x socks5://127.0.0.1:1080 http://httpbin.org/ip
+```
+
+---
+
+## 📚 دستورات Paqet
+
+`paqet` یک برنامه چند دستوری است. دستور اصلی `run` است که پروکسی رو شروع می‌کنه:
+
+| دستور | توضیحات |
+| :-------- | :------------------------------------------------------------------------------- |
+| `run`     | شروع پروکسی کلاینت یا سرور paqet. این دستور اصلی عملیاتی است. |
+| `secret`  | تولید یک کلید رمزنگاری امن جدید. |
+| `ping`    | ارسال یک پکت تست به سرور برای بررسی اتصال. |
+| `dump`    | ابزار تشخیصی مشابه `tcpdump` که پکت‌ها رو capture و decode می‌کنه. |
+| `version` | نمایش اطلاعات نسخه برنامه. |
+
+---
+
+## ⚠️ هشدار امنیتی
+
+این پروژه یک اکتشاف از شبکه‌سازی سطح پایین است و مسئولیت‌های امنیتی قابل توجهی دارد. پروتکل انتقال KCP رمزنگاری، احراز هویت و یکپارچگی را با استفاده از رمزنگاری متقارن با کلید مشترک فراهم می‌کند.
+
+امنیت کاملاً به مدیریت صحیح کلید بستگی دارد. از دستور `secret` برای تولید یک کلید قوی استفاده کن که باید در هر دو کلاینت و سرور یکسان باقی بماند.
+
+---
+
+## 📄 فایل‌های موجود در این Repository
+
+- `config_client.yaml` - کانفیگ آماده برای کلاینت (سرور A)
+- `config_server.yaml` - کانفیگ آماده برای سرور (سرور B)
+- `iptables_rules.sh` - اسکریپت اعمال قوانین iptables
+- `quick_setup.sh` - اسکریپت راه‌اندازی خودکار
+- `QUICK_START.md` - راهنمای سریع
+
+---
+
+<details>
+<summary><b>📖 English Documentation (Click to expand)</b></summary>
+
+# paqet - Transport over Raw Packet
+
 `paqet` is a bidirectional Packet-level proxy built using raw sockets in Go. It forwards traffic from a local client to a remote server, which then connects to target services. By operating at the packet level, it completely bypasses the host operating system's TCP/IP stack and uses KCP for secure, reliable transport.
 
 > **⚠️ Development Status Notice**
@@ -51,12 +395,13 @@ KCP is optimized for real-time applications, gaming, or unpredictable network co
 
 Download the pre-compiled binary for your client and server operating systems from the project's **Releases page**.
 
-You will also need the configuration files from the `example/` directory.
+You will also need the configuration files from the `example/` directory or use the ready-made configs in this repository:
+- `config_client.yaml` - Client configuration
+- `config_server.yaml` - Server configuration
 
 ### 2. Configure the Connection
 
-paqet uses a unified configuration approach with role-based settings. Copy and modify either:
-
+paqet uses a unified configuration approach with role-based settings. You can use the ready-made config files in this repository or copy and modify from:
 - `example/client.yaml.example` - Client configuration example
 - `example/server.yaml.example` - Server configuration example
 
@@ -329,3 +674,9 @@ This work draws inspiration from the research and implementation in the [gfw_res
 ## License
 
 This project is licensed under the MIT License. See the see [LICENSE](LICENSE) file for details.
+
+</details>
+
+---
+
+خب، دیگه همه چیز آماده! اگه مشکلی پیش اومد، لاگ‌ها رو چک کن یا بهم بگو تا کمک کنم. موفق باشی! 🚀
