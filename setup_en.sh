@@ -328,8 +328,8 @@ else
                 if [ -n "$LATEST_RELEASE" ]; then
                     echo "   Latest version found: $LATEST_RELEASE"
                     
-                    # Extract actual asset names from API
-                    ASSET_NAMES=$(echo "$RELEASE_INFO" | grep '"name":' | grep -i 'linux.*amd64\|amd64.*linux' | sed -E 's/.*"name":\s*"([^"]+)".*/\1/' | head -1)
+                    # Extract actual asset names from API (all linux amd64 files)
+                    ASSET_NAMES=$(echo "$RELEASE_INFO" | python3 -c "import sys, json; data=json.load(sys.stdin); print('\n'.join([a['name'] for a in data.get('assets', []) if 'linux' in a['name'].lower() and 'amd64' in a['name'].lower()]))" 2>/dev/null || echo "$RELEASE_INFO" | grep '"name":' | grep -i 'linux.*amd64\|amd64.*linux' | sed -E 's/.*"name":\s*"([^"]+)".*/\1/')
                     
                     DOWNLOAD_SUCCESS=false
                     
@@ -338,14 +338,46 @@ else
                         for ASSET_NAME in $ASSET_NAMES; do
                             DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${ASSET_NAME}"
                             echo "   Trying actual file: $ASSET_NAME..."
+                            
+                            # Download file
                             if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
-                                wget "$DOWNLOAD_URL" -O paqet
-                                if [ $? -eq 0 ] && [ -f "./paqet" ]; then
-                                    chmod +x paqet
-                                    PAQET_CMD="./paqet"
-                                    echo "✓ Paqet downloaded ($ASSET_NAME)"
-                                    DOWNLOAD_SUCCESS=true
-                                    break
+                                TEMP_FILE=$(mktemp)
+                                wget "$DOWNLOAD_URL" -O "$TEMP_FILE" 2>/dev/null
+                                
+                                if [ $? -eq 0 ] && [ -f "$TEMP_FILE" ]; then
+                                    # If tar.gz or tar, extract it
+                                    if [[ "$ASSET_NAME" == *.tar.gz ]] || [[ "$ASSET_NAME" == *.tgz ]]; then
+                                        echo "   Extracting from tar.gz..."
+                                        tar -xzf "$TEMP_FILE" -C . 2>/dev/null
+                                        rm "$TEMP_FILE"
+                                        # Find extracted paqet file
+                                        if [ -f "./paqet" ]; then
+                                            chmod +x paqet
+                                            PAQET_CMD="./paqet"
+                                            echo "✓ Paqet downloaded and extracted ($ASSET_NAME)"
+                                            DOWNLOAD_SUCCESS=true
+                                            break
+                                        fi
+                                    elif [[ "$ASSET_NAME" == *.zip ]]; then
+                                        echo "   Extracting from zip..."
+                                        unzip -q "$TEMP_FILE" -d . 2>/dev/null
+                                        rm "$TEMP_FILE"
+                                        if [ -f "./paqet" ]; then
+                                            chmod +x paqet
+                                            PAQET_CMD="./paqet"
+                                            echo "✓ Paqet downloaded and extracted ($ASSET_NAME)"
+                                            DOWNLOAD_SUCCESS=true
+                                            break
+                                        fi
+                                    else
+                                        # Direct binary file
+                                        mv "$TEMP_FILE" paqet
+                                        chmod +x paqet
+                                        PAQET_CMD="./paqet"
+                                        echo "✓ Paqet downloaded ($ASSET_NAME)"
+                                        DOWNLOAD_SUCCESS=true
+                                        break
+                                    fi
                                 fi
                             fi
                         done
