@@ -316,6 +316,130 @@ fi
 
 echo "✓ فایل کانفیگ $CONFIG_FILE ساخته شد"
 
+# اگر سرور است، ساخت بسته Offline برای کلاینت
+if [ "$ROLE" == "server" ]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📦 ساخت بسته Offline برای کلاینت"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "اگر سرور کلاینت اینترنت نداره، می‌تونی یک بسته Offline بسازی"
+    echo "و به سرور کلاینت منتقل کنی."
+    echo ""
+    read -p "آیا می‌خوای بسته Offline برای کلاینت بسازی؟ [Y/n]: " CREATE_CLIENT_PACKAGE
+    
+    if [[ "$CREATE_CLIENT_PACKAGE" != "n" && "$CREATE_CLIENT_PACKAGE" != "N" ]]; then
+        echo ""
+        echo "در حال ساخت بسته Offline..."
+        
+        # پیدا کردن مسیر paqet
+        PAQET_PATH=$(readlink -f "$PAQET_CMD" 2>/dev/null || realpath "$PAQET_CMD" 2>/dev/null || echo "$(pwd)/$PAQET_CMD")
+        
+        # ساخت اسکریپت موقت
+        cat > /tmp/create_client_package_temp.sh <<'TEMP_EOF'
+#!/bin/bash
+SECRET_KEY="$1"
+PAQET_BINARY="$2"
+PACKAGE_NAME="paqet-client-offline"
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+PACKAGE_DIR="${PACKAGE_NAME}-${TIMESTAMP}"
+ARCHIVE_NAME="${PACKAGE_NAME}-${TIMESTAMP}.tar"
+
+rm -rf "$PACKAGE_DIR"
+mkdir -p "$PACKAGE_DIR"
+
+echo "📦 در حال جمع‌آوری فایل‌ها..."
+
+# کپی اسکریپت‌ها
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cp "$SCRIPT_DIR/setup.sh" "$PACKAGE_DIR/" 2>/dev/null || true
+cp "$SCRIPT_DIR/setup_fa.sh" "$PACKAGE_DIR/" 2>/dev/null || true
+cp "$SCRIPT_DIR/setup_en.sh" "$PACKAGE_DIR/" 2>/dev/null || true
+cp "$SCRIPT_DIR/config_client.yaml" "$PACKAGE_DIR/" 2>/dev/null || true
+
+# کپی paqet
+if [ -f "$PAQET_BINARY" ]; then
+    cp "$PAQET_BINARY" "$PACKAGE_DIR/paqet"
+    chmod +x "$PACKAGE_DIR/paqet"
+    echo "✓ فایل paqet کپی شد"
+fi
+
+# ذخیره کلید
+echo "$SECRET_KEY" > "$PACKAGE_DIR/.paqet_secret_key.txt"
+chmod 600 "$PACKAGE_DIR/.paqet_secret_key.txt"
+echo "✓ کلید رمزنگاری ذخیره شد"
+
+# ساخت README
+cat > "$PACKAGE_DIR/README_CLIENT.md" <<'README_EOF'
+# بسته Offline نصب Paqet - کلاینت
+
+این بسته برای نصب Paqet روی سرور کلاینت (بدون اینترنت) طراحی شده است.
+
+## مراحل نصب:
+
+### 1. استخراج بسته
+```bash
+tar -xf paqet-client-offline-*.tar
+cd paqet-client-offline-*
+```
+
+### 2. راه‌اندازی
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+اسکریپت ازت می‌پرسه که این سرور کلاینت است و اطلاعات شبکه رو جمع می‌کنه.
+
+### 3. اجرا
+```bash
+sudo ./paqet run -c config_client.yaml
+```
+
+## نکات:
+
+- کلید رمزنگاری در `.paqet_secret_key.txt` ذخیره شده
+- باید آی‌پی سرور B رو در کانفیگ وارد کنی
+- برای اجرا نیاز به sudo دارید
+README_EOF
+
+# ساخت tar (بدون gzip)
+tar -cf "$ARCHIVE_NAME" "$PACKAGE_DIR"
+
+echo ""
+echo "✅ بسته ساخته شد: $ARCHIVE_NAME"
+echo "   حجم: $(du -h "$ARCHIVE_NAME" | cut -f1)"
+echo ""
+echo "🚀 برای استفاده:"
+echo "   1. فایل رو به سرور کلاینت منتقل کن"
+echo "   2. استخراج کن: tar -xf $ARCHIVE_NAME"
+echo "   3. راه‌اندازی کن: cd $PACKAGE_DIR && ./setup.sh"
+TEMP_EOF
+
+        chmod +x /tmp/create_client_package_temp.sh
+        
+        # اجرای اسکریپت
+        bash /tmp/create_client_package_temp.sh "$SECRET_KEY" "$PAQET_PATH"
+        
+        CLIENT_PACKAGE=$(ls -t paqet-client-offline-*.tar 2>/dev/null | head -1)
+        if [ -n "$CLIENT_PACKAGE" ]; then
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📦 بسته آماده است!"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "فایل: $CLIENT_PACKAGE"
+            echo ""
+            echo "برای انتقال به سرور کلاینت:"
+            echo "  scp $CLIENT_PACKAGE user@client-server:/tmp/"
+            echo ""
+            echo "یا از طریق USB/SD Card"
+        fi
+        
+        rm -f /tmp/create_client_package_temp.sh
+    fi
+fi
+
 # اگر سرور است، اعمال iptables
 if [ "$ROLE" == "server" ]; then
     echo ""

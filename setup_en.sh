@@ -316,6 +316,130 @@ fi
 
 echo "✓ Configuration file $CONFIG_FILE created"
 
+# If server, create offline package for client
+if [ "$ROLE" == "server" ]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📦 Create Offline Package for Client"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "If the client server doesn't have internet, you can create"
+    echo "an offline package and transfer it to the client server."
+    echo ""
+    read -p "Do you want to create an offline package for the client? [Y/n]: " CREATE_CLIENT_PACKAGE
+    
+    if [[ "$CREATE_CLIENT_PACKAGE" != "n" && "$CREATE_CLIENT_PACKAGE" != "N" ]]; then
+        echo ""
+        echo "Creating offline package..."
+        
+        # Find paqet path
+        PAQET_PATH=$(readlink -f "$PAQET_CMD" 2>/dev/null || realpath "$PAQET_CMD" 2>/dev/null || echo "$(pwd)/$PAQET_CMD")
+        
+        # Create temporary script
+        cat > /tmp/create_client_package_temp.sh <<'TEMP_EOF'
+#!/bin/bash
+SECRET_KEY="$1"
+PAQET_BINARY="$2"
+PACKAGE_NAME="paqet-client-offline"
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+PACKAGE_DIR="${PACKAGE_NAME}-${TIMESTAMP}"
+ARCHIVE_NAME="${PACKAGE_NAME}-${TIMESTAMP}.tar"
+
+rm -rf "$PACKAGE_DIR"
+mkdir -p "$PACKAGE_DIR"
+
+echo "📦 Collecting files..."
+
+# Copy scripts
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cp "$SCRIPT_DIR/setup.sh" "$PACKAGE_DIR/" 2>/dev/null || true
+cp "$SCRIPT_DIR/setup_fa.sh" "$PACKAGE_DIR/" 2>/dev/null || true
+cp "$SCRIPT_DIR/setup_en.sh" "$PACKAGE_DIR/" 2>/dev/null || true
+cp "$SCRIPT_DIR/config_client.yaml" "$PACKAGE_DIR/" 2>/dev/null || true
+
+# Copy paqet
+if [ -f "$PAQET_BINARY" ]; then
+    cp "$PAQET_BINARY" "$PACKAGE_DIR/paqet"
+    chmod +x "$PACKAGE_DIR/paqet"
+    echo "✓ Paqet binary copied"
+fi
+
+# Save key
+echo "$SECRET_KEY" > "$PACKAGE_DIR/.paqet_secret_key.txt"
+chmod 600 "$PACKAGE_DIR/.paqet_secret_key.txt"
+echo "✓ Encryption key saved"
+
+# Create README
+cat > "$PACKAGE_DIR/README_CLIENT.md" <<'README_EOF'
+# Paqet Offline Installer - Client
+
+This package is designed for installing Paqet on the client server (without internet).
+
+## Installation Steps:
+
+### 1. Extract package
+```bash
+tar -xf paqet-client-offline-*.tar
+cd paqet-client-offline-*
+```
+
+### 2. Setup
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+The script will ask if this is a client server and collect network information.
+
+### 3. Run
+```bash
+sudo ./paqet run -c config_client.yaml
+```
+
+## Notes:
+
+- Encryption key is saved in `.paqet_secret_key.txt`
+- You need to enter Server B IP address in config
+- You need sudo to run paqet
+README_EOF
+
+# Create tar (without gzip)
+tar -cf "$ARCHIVE_NAME" "$PACKAGE_DIR"
+
+echo ""
+echo "✅ Package created: $ARCHIVE_NAME"
+echo "   Size: $(du -h "$ARCHIVE_NAME" | cut -f1)"
+echo ""
+echo "🚀 To use:"
+echo "   1. Transfer file to client server"
+echo "   2. Extract: tar -xf $ARCHIVE_NAME"
+echo "   3. Setup: cd $PACKAGE_DIR && ./setup.sh"
+TEMP_EOF
+
+        chmod +x /tmp/create_client_package_temp.sh
+        
+        # Execute script
+        bash /tmp/create_client_package_temp.sh "$SECRET_KEY" "$PAQET_PATH"
+        
+        CLIENT_PACKAGE=$(ls -t paqet-client-offline-*.tar 2>/dev/null | head -1)
+        if [ -n "$CLIENT_PACKAGE" ]; then
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📦 Package Ready!"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "File: $CLIENT_PACKAGE"
+            echo ""
+            echo "To transfer to client server:"
+            echo "  scp $CLIENT_PACKAGE user@client-server:/tmp/"
+            echo ""
+            echo "Or via USB/SD Card"
+        fi
+        
+        rm -f /tmp/create_client_package_temp.sh
+    fi
+fi
+
 # Apply iptables if server
 if [ "$ROLE" == "server" ]; then
     echo ""
