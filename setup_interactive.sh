@@ -456,12 +456,22 @@ else
                             msg "   در حال استخراج از tar.gz..." "   Extracting from tar.gz..."
                             tar -xzf "$TEMP_FILE" -C . 2>/dev/null
                             rm "$TEMP_FILE"
-                            # پیدا کردن فایل paqet استخراج شده
+                            # پیدا کردن فایل paqet استخراج شده (ممکنه در یک پوشه باشه)
                             if [ -f "./paqet" ]; then
                                 chmod +x paqet
                                 PAQET_CMD="./paqet"
                                 msg "✓ Paqet دانلود و استخراج شد ($CORRECT_FILENAME)" "✓ Paqet downloaded and extracted ($CORRECT_FILENAME)"
                                 DOWNLOAD_SUCCESS=true
+                            else
+                                # جستجو برای paqet در پوشه‌های زیر
+                                PAQET_FILE=$(find . -name "paqet" -type f 2>/dev/null | head -1)
+                                if [ -n "$PAQET_FILE" ]; then
+                                    mv "$PAQET_FILE" ./paqet
+                                    chmod +x paqet
+                                    PAQET_CMD="./paqet"
+                                    msg "✓ Paqet دانلود و استخراج شد ($CORRECT_FILENAME)" "✓ Paqet downloaded and extracted ($CORRECT_FILENAME)"
+                                    DOWNLOAD_SUCCESS=true
+                                fi
                             fi
                         fi
                     fi
@@ -491,6 +501,17 @@ else
                                                 msg "✓ Paqet دانلود و استخراج شد ($ASSET_NAME)" "✓ Paqet downloaded and extracted ($ASSET_NAME)"
                                                 DOWNLOAD_SUCCESS=true
                                                 break
+                                            else
+                                                # جستجو برای paqet در پوشه‌های زیر
+                                                PAQET_FILE=$(find . -name "paqet" -type f 2>/dev/null | head -1)
+                                                if [ -n "$PAQET_FILE" ]; then
+                                                    mv "$PAQET_FILE" ./paqet
+                                                    chmod +x paqet
+                                                    PAQET_CMD="./paqet"
+                                                    msg "✓ Paqet دانلود و استخراج شد ($ASSET_NAME)" "✓ Paqet downloaded and extracted ($ASSET_NAME)"
+                                                    DOWNLOAD_SUCCESS=true
+                                                    break
+                                                fi
                                             fi
                                         elif [[ "$ASSET_NAME" == *.zip ]]; then
                                             msg "   در حال استخراج از zip..." "   Extracting from zip..."
@@ -502,6 +523,17 @@ else
                                                 msg "✓ Paqet دانلود و استخراج شد ($ASSET_NAME)" "✓ Paqet downloaded and extracted ($ASSET_NAME)"
                                                 DOWNLOAD_SUCCESS=true
                                                 break
+                                            else
+                                                # جستجو برای paqet در پوشه‌های زیر
+                                                PAQET_FILE=$(find . -name "paqet" -type f 2>/dev/null | head -1)
+                                                if [ -n "$PAQET_FILE" ]; then
+                                                    mv "$PAQET_FILE" ./paqet
+                                                    chmod +x paqet
+                                                    PAQET_CMD="./paqet"
+                                                    msg "✓ Paqet دانلود و استخراج شد ($ASSET_NAME)" "✓ Paqet downloaded and extracted ($ASSET_NAME)"
+                                                    DOWNLOAD_SUCCESS=true
+                                                    break
+                                                fi
                                             fi
                                         else
                                             mv "$TEMP_FILE" paqet

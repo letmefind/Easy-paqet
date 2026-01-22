@@ -425,12 +425,22 @@ else
                             echo "   Extracting from tar.gz..."
                             tar -xzf "$TEMP_FILE" -C . 2>/dev/null
                             rm "$TEMP_FILE"
-                            # Find extracted paqet file
+                            # Find extracted paqet file (might be in a subdirectory)
                             if [ -f "./paqet" ]; then
                                 chmod +x paqet
                                 PAQET_CMD="./paqet"
                                 echo "✓ Paqet downloaded and extracted ($CORRECT_FILENAME)"
                                 DOWNLOAD_SUCCESS=true
+                            else
+                                # Look for paqet in subdirectories
+                                PAQET_FILE=$(find . -name "paqet" -type f 2>/dev/null | head -1)
+                                if [ -n "$PAQET_FILE" ]; then
+                                    mv "$PAQET_FILE" ./paqet
+                                    chmod +x paqet
+                                    PAQET_CMD="./paqet"
+                                    echo "✓ Paqet downloaded and extracted ($CORRECT_FILENAME)"
+                                    DOWNLOAD_SUCCESS=true
+                                fi
                             fi
                         fi
                     fi
@@ -456,13 +466,24 @@ else
                                         echo "   Extracting from tar.gz..."
                                         tar -xzf "$TEMP_FILE" -C . 2>/dev/null
                                         rm "$TEMP_FILE"
-                                        # Find extracted paqet file
+                                        # Find extracted paqet file (might be in a subdirectory)
                                         if [ -f "./paqet" ]; then
                                             chmod +x paqet
                                             PAQET_CMD="./paqet"
                                             echo "✓ Paqet downloaded and extracted ($ASSET_NAME)"
                                             DOWNLOAD_SUCCESS=true
                                             break
+                                        else
+                                            # Look for paqet in subdirectories
+                                            PAQET_FILE=$(find . -name "paqet" -type f 2>/dev/null | head -1)
+                                            if [ -n "$PAQET_FILE" ]; then
+                                                mv "$PAQET_FILE" ./paqet
+                                                chmod +x paqet
+                                                PAQET_CMD="./paqet"
+                                                echo "✓ Paqet downloaded and extracted ($ASSET_NAME)"
+                                                DOWNLOAD_SUCCESS=true
+                                                break
+                                            fi
                                         fi
                                     elif [[ "$ASSET_NAME" == *.zip ]]; then
                                         echo "   Extracting from zip..."
@@ -474,6 +495,17 @@ else
                                             echo "✓ Paqet downloaded and extracted ($ASSET_NAME)"
                                             DOWNLOAD_SUCCESS=true
                                             break
+                                        else
+                                            # Look for paqet in subdirectories
+                                            PAQET_FILE=$(find . -name "paqet" -type f 2>/dev/null | head -1)
+                                            if [ -n "$PAQET_FILE" ]; then
+                                                mv "$PAQET_FILE" ./paqet
+                                                chmod +x paqet
+                                                PAQET_CMD="./paqet"
+                                                echo "✓ Paqet downloaded and extracted ($ASSET_NAME)"
+                                                DOWNLOAD_SUCCESS=true
+                                                break
+                                            fi
                                         fi
                                     else
                                         # Direct binary file
