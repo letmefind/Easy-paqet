@@ -742,3 +742,78 @@ echo "$SECRET_KEY" > .paqet_secret_key.txt
 chmod 600 .paqet_secret_key.txt
 echo "💾 کلید رمزنگاری در فایل .paqet_secret_key.txt ذخیره شد"
 echo "   ⚠️  این فایل رو با سرور دیگه به اشتراک بذار!"
+
+# سوال درباره ساخت سرویس systemd
+echo ""
+read -p "آیا می‌خوای به عنوان سرویس systemd نصب بشه؟ [Y/n]: " CREATE_SERVICE
+
+if [[ "$CREATE_SERVICE" != "n" && "$CREATE_SERVICE" != "N" ]]; then
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "🔧 ساخت سرویس systemd"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    
+    # پیدا کردن مسیر paqet - مدیریت مسیرهای نسبی به درستی
+    if [[ "$PAQET_CMD" == ./* ]]; then
+        # مسیر نسبی مثل ./paqet
+        PAQET_PATH="$(cd "$(dirname "$PAQET_CMD")" && pwd)/$(basename "$PAQET_CMD")"
+    elif [[ "$PAQET_CMD" == /* ]]; then
+        # مسیر مطلق
+        PAQET_PATH="$PAQET_CMD"
+    else
+        # دستور در PATH
+        PAQET_PATH=$(command -v "$PAQET_CMD" 2>/dev/null || echo "$(pwd)/$PAQET_CMD")
+    fi
+    
+    if [[ "$CONFIG_FILE" == ./* ]] || [[ "$CONFIG_FILE" == /* ]]; then
+        CONFIG_PATH=$(readlink -f "$CONFIG_FILE" 2>/dev/null || realpath "$CONFIG_FILE" 2>/dev/null || echo "$(pwd)/$CONFIG_FILE")
+    else
+        CONFIG_PATH="$(pwd)/$CONFIG_FILE"
+    fi
+    
+    # نام سرویس
+    SERVICE_NAME="paqet-${ROLE}"
+    
+    # ساخت فایل سرویس systemd
+    cat > /tmp/${SERVICE_NAME}.service <<EOF
+[Unit]
+Description=Paqet ${ROLE} service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=${PAQET_PATH} run -c ${CONFIG_PATH}
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    
+    echo "📄 فایل سرویس ساخته شد: /tmp/${SERVICE_NAME}.service"
+    
+    # کپی به systemd
+    sudo cp /tmp/${SERVICE_NAME}.service /etc/systemd/system/
+    sudo systemctl daemon-reload
+    
+    echo "✓ سرویس systemd نصب شد"
+    echo ""
+    echo "دستورات مدیریت سرویس:"
+    echo "  شروع:   sudo systemctl start ${SERVICE_NAME}"
+    echo "  توقف:   sudo systemctl stop ${SERVICE_NAME}"
+    echo "  وضعیت:  sudo systemctl status ${SERVICE_NAME}"
+    echo "  لاگ:    sudo journalctl -u ${SERVICE_NAME} -f"
+    echo "  فعال:   sudo systemctl enable ${SERVICE_NAME}"
+    echo ""
+    
+    read -p "آیا می‌خوای الان سرویس رو شروع کنی؟ [Y/n]: " START_SERVICE
+    if [[ "$START_SERVICE" != "n" && "$START_SERVICE" != "N" ]]; then
+        sudo systemctl start ${SERVICE_NAME}
+        sleep 2
+        sudo systemctl status ${SERVICE_NAME} --no-pager -l
+    fi
+fi
