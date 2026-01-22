@@ -590,65 +590,66 @@ else
                                     wget "$DOWNLOAD_URL" -O "$TEMP_FILE" 2>/dev/null
                                     
                                     if [ $? -eq 0 ] && [ -f "$TEMP_FILE" ]; then
-                                    # If tar.gz or tar, extract it
-                                    if [[ "$ASSET_NAME" == *.tar.gz ]] || [[ "$ASSET_NAME" == *.tgz ]]; then
-                                        echo "   Extracting from tar.gz..."
-                                        tar -xzf "$TEMP_FILE" -C . 2>/dev/null
-                                        rm "$TEMP_FILE"
-                                        # Find extracted paqet file (might be in a subdirectory or have different name)
-                                        if [ -f "./paqet" ]; then
-                                            chmod +x paqet
-                                            PAQET_CMD="./paqet"
-                                            echo "✓ Paqet downloaded and extracted ($ASSET_NAME)"
-                                            DOWNLOAD_SUCCESS=true
-                                            break
-                                        else
-                                            # Look for paqet files (paqet, paqet_linux_amd64, etc.)
-                                            PAQET_FILE=$(find . -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
-                                            if [ -n "$PAQET_FILE" ]; then
-                                                mv "$PAQET_FILE" ./paqet
+                                        # If tar.gz or tar, extract it
+                                        if [[ "$ASSET_NAME" == *.tar.gz ]] || [[ "$ASSET_NAME" == *.tgz ]]; then
+                                            echo "   Extracting from tar.gz..."
+                                            tar -xzf "$TEMP_FILE" -C . 2>/dev/null
+                                            rm "$TEMP_FILE"
+                                            # Find extracted paqet file (might be in a subdirectory or have different name)
+                                            if [ -f "./paqet" ]; then
                                                 chmod +x paqet
                                                 PAQET_CMD="./paqet"
                                                 echo "✓ Paqet downloaded and extracted ($ASSET_NAME)"
                                                 DOWNLOAD_SUCCESS=true
                                                 break
+                                            else
+                                                # Look for paqet files (paqet, paqet_linux_amd64, etc.)
+                                                PAQET_FILE=$(find . -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
+                                                if [ -n "$PAQET_FILE" ]; then
+                                                    mv "$PAQET_FILE" ./paqet
+                                                    chmod +x paqet
+                                                    PAQET_CMD="./paqet"
+                                                    echo "✓ Paqet downloaded and extracted ($ASSET_NAME)"
+                                                    DOWNLOAD_SUCCESS=true
+                                                    break
+                                                fi
                                             fi
-                                        fi
-                                    elif [[ "$ASSET_NAME" == *.zip ]]; then
-                                        echo "   Extracting from zip..."
-                                        unzip -q "$TEMP_FILE" -d . 2>/dev/null
-                                        rm "$TEMP_FILE"
-                                        if [ -f "./paqet" ]; then
-                                            chmod +x paqet
-                                            PAQET_CMD="./paqet"
-                                            echo "✓ Paqet downloaded and extracted ($ASSET_NAME)"
-                                            DOWNLOAD_SUCCESS=true
-                                            break
-                                        else
-                                            # Look for paqet files (paqet, paqet_linux_amd64, etc.)
-                                            PAQET_FILE=$(find . -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
-                                            if [ -n "$PAQET_FILE" ]; then
-                                                mv "$PAQET_FILE" ./paqet
+                                        elif [[ "$ASSET_NAME" == *.zip ]]; then
+                                            echo "   Extracting from zip..."
+                                            unzip -q "$TEMP_FILE" -d . 2>/dev/null
+                                            rm "$TEMP_FILE"
+                                            if [ -f "./paqet" ]; then
                                                 chmod +x paqet
                                                 PAQET_CMD="./paqet"
                                                 echo "✓ Paqet downloaded and extracted ($ASSET_NAME)"
                                                 DOWNLOAD_SUCCESS=true
                                                 break
+                                            else
+                                                # Look for paqet files (paqet, paqet_linux_amd64, etc.)
+                                                PAQET_FILE=$(find . -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
+                                                if [ -n "$PAQET_FILE" ]; then
+                                                    mv "$PAQET_FILE" ./paqet
+                                                    chmod +x paqet
+                                                    PAQET_CMD="./paqet"
+                                                    echo "✓ Paqet downloaded and extracted ($ASSET_NAME)"
+                                                    DOWNLOAD_SUCCESS=true
+                                                    break
+                                                fi
                                             fi
+                                        else
+                                            # Direct binary file
+                                            mv "$TEMP_FILE" paqet
+                                            chmod +x paqet
+                                            PAQET_CMD="./paqet"
+                                            echo "✓ Paqet downloaded ($ASSET_NAME)"
+                                            DOWNLOAD_SUCCESS=true
+                                            break
                                         fi
-                                    else
-                                        # Direct binary file
-                                        mv "$TEMP_FILE" paqet
-                                        chmod +x paqet
-                                        PAQET_CMD="./paqet"
-                                        echo "✓ Paqet downloaded ($ASSET_NAME)"
-                                        DOWNLOAD_SUCCESS=true
-                                        break
-                                    fi
                                     fi
                                 fi
                             done
                         fi
+                    fi
                     
                     if [ "$DOWNLOAD_SUCCESS" == false ]; then
                         echo ""
