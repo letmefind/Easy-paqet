@@ -319,49 +319,81 @@ else
         if [[ "$DOWNLOAD" != "n" && "$DOWNLOAD" != "N" ]]; then
             echo "در حال دانلود paqet..."
             
-            # لیست نام‌های ممکن فایل
-            POSSIBLE_NAMES=(
-                "paqet-linux-amd64"
-                "paqet_linux_amd64"
-                "paqet-linux_amd64"
-                "paqet_linux-amd64"
-            )
-            
-            DOWNLOAD_SUCCESS=false
-            for FILENAME in "${POSSIBLE_NAMES[@]}"; do
-                echo "   امتحان: $FILENAME..."
-                if wget -q --spider https://github.com/hanselime/paqet/releases/latest/download/$FILENAME 2>/dev/null; then
-                    wget https://github.com/hanselime/paqet/releases/latest/download/$FILENAME -O paqet
-                    if [ $? -eq 0 ] && [ -f "./paqet" ]; then
-                        chmod +x paqet
-                        PAQET_CMD="./paqet"
-                        echo "✓ Paqet دانلود شد ($FILENAME)"
-                        DOWNLOAD_SUCCESS=true
-                        break
-                    fi
-                fi
-            done
-            
-            if [ "$DOWNLOAD_SUCCESS" == false ]; then
-                echo ""
-                echo "❌ دانلود خودکار موفق نشد!"
-                echo ""
-                echo "لطفاً دستی از لینک زیر دانلود کن:"
-                echo "   https://github.com/hanselime/paqet/releases/latest"
-                echo ""
-                echo "یا از دستور زیر استفاده کن:"
-                echo "   wget https://github.com/hanselime/paqet/releases/download/v1.0.0-alpha.6/paqet_linux_amd64 -O paqet"
-                echo ""
-                read -p "آیا فایل رو دستی دانلود کردی و در همین مسیر هست؟ [Y/n]: " MANUAL_DOWNLOAD
-                if [[ "$MANUAL_DOWNLOAD" != "n" && "$MANUAL_DOWNLOAD" != "N" ]]; then
-                    if [ -f "./paqet" ]; then
-                        chmod +x paqet
-                        PAQET_CMD="./paqet"
-                        echo "✓ فایل paqet پیدا شد"
-                    else
-                        PAQET_CMD="paqet"
+            # استفاده از GitHub API برای پیدا کردن آخرین release و فایل‌های موجود
+            if command -v curl &> /dev/null; then
+                echo "   در حال بررسی آخرین release..."
+                LATEST_RELEASE=$(curl -s https://api.github.com/repos/hanselime/paqet/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+                
+                if [ -n "$LATEST_RELEASE" ]; then
+                    echo "   آخرین نسخه پیدا شد: $LATEST_RELEASE"
+                    
+                    # لیست نام‌های ممکن فایل
+                    POSSIBLE_NAMES=(
+                        "paqet-linux-amd64"
+                        "paqet_linux_amd64"
+                        "paqet-linux_amd64"
+                        "paqet_linux-amd64"
+                        "paqet_${LATEST_RELEASE}_linux_amd64"
+                        "paqet-${LATEST_RELEASE}-linux-amd64"
+                    )
+                    
+                    DOWNLOAD_SUCCESS=false
+                    for FILENAME in "${POSSIBLE_NAMES[@]}"; do
+                        DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${FILENAME}"
+                        echo "   امتحان: $FILENAME..."
+                        if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
+                            wget "$DOWNLOAD_URL" -O paqet
+                            if [ $? -eq 0 ] && [ -f "./paqet" ]; then
+                                chmod +x paqet
+                                PAQET_CMD="./paqet"
+                                echo "✓ Paqet دانلود شد ($FILENAME)"
+                                DOWNLOAD_SUCCESS=true
+                                break
+                            fi
+                        fi
+                    done
+                    
+                    if [ "$DOWNLOAD_SUCCESS" == false ]; then
+                        echo ""
+                        echo "⚠️  دانلود خودکار موفق نشد!"
+                        echo ""
+                        echo "لطفاً دستی از لینک زیر دانلود کن:"
+                        echo "   https://github.com/hanselime/paqet/releases/tag/${LATEST_RELEASE}"
+                        echo ""
+                        echo "یا از دستور زیر استفاده کن (نام فایل رو از صفحه release پیدا کن):"
+                        echo "   wget https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/[نام-فایل] -O paqet"
+                        echo ""
+                        read -p "آیا فایل رو دستی دانلود کردی و در همین مسیر هست؟ [Y/n]: " MANUAL_DOWNLOAD
+                        if [[ "$MANUAL_DOWNLOAD" != "n" && "$MANUAL_DOWNLOAD" != "N" ]]; then
+                            if [ -f "./paqet" ]; then
+                                chmod +x paqet
+                                PAQET_CMD="./paqet"
+                                echo "✓ فایل paqet پیدا شد"
+                            else
+                                PAQET_CMD="paqet"
+                            fi
+                        else
+                            PAQET_CMD="paqet"
+                        fi
                     fi
                 else
+                    echo "⚠️  نتوانست آخرین release رو پیدا کنه"
+                    echo "لطفاً دستی دانلود کن: https://github.com/hanselime/paqet/releases"
+                    PAQET_CMD="paqet"
+                fi
+            else
+                # اگر curl موجود نبود، از روش قدیمی استفاده کن
+                echo "⚠️  curl پیدا نشد، استفاده از روش ساده..."
+                wget https://github.com/hanselime/paqet/releases/latest/download/paqet-linux-amd64 -O paqet 2>&1
+                if [ $? -eq 0 ] && [ -f "./paqet" ]; then
+                    chmod +x paqet
+                    PAQET_CMD="./paqet"
+                    echo "✓ Paqet دانلود شد"
+                else
+                    echo ""
+                    echo "❌ دانلود موفق نشد!"
+                    echo "لطفاً دستی از لینک زیر دانلود کن:"
+                    echo "   https://github.com/hanselime/paqet/releases/latest"
                     PAQET_CMD="paqet"
                 fi
             fi
