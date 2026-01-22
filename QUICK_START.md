@@ -7,7 +7,6 @@
 - `config_client.yaml` - کانفیگ سرور A (کلاینت)
 - `config_server.yaml` - کانفیگ سرور B (سرور)
 - `iptables_rules.sh` - اسکریپت اعمال قوانین iptables
-- `quick_setup.sh` - اسکریپت راه‌اندازی خودکار
 - `README.md` - راهنمای کامل و جامع
 
 ## 🎯 مراحل سریع:

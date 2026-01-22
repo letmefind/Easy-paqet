@@ -25,7 +25,6 @@ echo "📦 در حال جمع‌آوری فایل‌ها..."
 cp setup.sh "$PACKAGE_DIR/"
 cp setup_fa.sh "$PACKAGE_DIR/"
 cp setup_en.sh "$PACKAGE_DIR/"
-cp setup_interactive.sh "$PACKAGE_DIR/" 2>/dev/null || true
 
 # کپی فایل‌های کانفیگ template
 cp config_server.yaml "$PACKAGE_DIR/"

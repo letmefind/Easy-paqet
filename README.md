@@ -360,7 +360,6 @@ curl -x socks5://127.0.0.1:1080 http://httpbin.org/ip
 - `config_client.yaml` - کانفیگ آماده برای کلاینت (سرور A)
 - `config_server.yaml` - کانفیگ آماده برای سرور (سرور B)
 - `iptables_rules.sh` - اسکریپت اعمال قوانین iptables
-- `quick_setup.sh` - اسکریپت راه‌اندازی خودکار
 - `QUICK_START.md` - راهنمای سریع
 
 ---

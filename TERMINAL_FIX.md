@@ -36,7 +36,7 @@ export LANG=C.UTF-8
 export LANGUAGE=C.UTF-8
 
 # سپس اسکریپت رو اجرا کن
-./setup_interactive.sh
+./setup.sh
 ```
 
 یا برای دائمی کردن:
@@ -59,7 +59,7 @@ sudo yum install tmux  # CentOS/RHEL
 
 # اجرا در tmux
 tmux
-./setup_interactive.sh
+./setup.sh
 ```
 
 ### 4️⃣ استفاده از SSH Client بهتر
@@ -112,4 +112,4 @@ echo "این یک تست فارسی است"
 
 ---
 
-**نکته:** اسکریپت `setup_interactive.sh` خودش سعی می‌کنه locale رو تنظیم کنه، اما اگر terminal شما از RTL پشتیبانی نکنه، باز هم مشکل خواهی داشت.
+**نکته:** اسکریپت‌های setup خودشون سعی می‌کنن locale رو تنظیم کنن، اما اگر terminal شما از RTL پشتیبانی نکنه، باز هم مشکل خواهی داشت.

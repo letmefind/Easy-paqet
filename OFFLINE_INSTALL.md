@@ -10,7 +10,6 @@
 - `setup.sh` - راه‌انداز اصلی
 - `setup_fa.sh` - اسکریپت فارسی
 - `setup_en.sh` - اسکریپت انگلیسی
-- `setup_interactive.sh` - اسکریپت دو زبانه (اختیاری)
 
 ### 2. فایل‌های کانفیگ Template
 - `config_server.yaml` - template برای سرور
