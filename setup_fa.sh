@@ -342,36 +342,36 @@ if [ "$ROLE" == "server" ]; then
         CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
         
         # ساخت اسکریپت موقت
-        cat > /tmp/create_client_package_temp.sh <<TEMP_EOF
+        cat > /tmp/create_client_package_temp.sh <<'TEMP_EOF'
 #!/bin/bash
-SECRET_KEY="\$1"
-PAQET_BINARY="\$2"
-SCRIPT_DIR="\$3"
+SECRET_KEY="$1"
+PAQET_BINARY="$2"
+SCRIPT_DIR="$3"
 PACKAGE_NAME="paqet-client-offline"
-TIMESTAMP=\$(date +%Y%m%d-%H%M%S)
-PACKAGE_DIR="\${PACKAGE_NAME}-\${TIMESTAMP}"
-ARCHIVE_NAME="\${PACKAGE_NAME}-\${TIMESTAMP}.tar"
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+PACKAGE_DIR="${PACKAGE_NAME}-${TIMESTAMP}"
+ARCHIVE_NAME="${PACKAGE_NAME}-${TIMESTAMP}.tar"
 
-rm -rf "\$PACKAGE_DIR"
-mkdir -p "\$PACKAGE_DIR"
+rm -rf "$PACKAGE_DIR"
+mkdir -p "$PACKAGE_DIR"
 
 echo "📦 در حال جمع‌آوری فایل‌ها..."
 
 # کپی اسکریپت‌ها از دایرکتوری اصلی
-if [ -f "\$SCRIPT_DIR/setup.sh" ]; then
-    cp "\$SCRIPT_DIR/setup.sh" "\$PACKAGE_DIR/" 2>/dev/null || true
+if [ -f "$SCRIPT_DIR/setup.sh" ]; then
+    cp "$SCRIPT_DIR/setup.sh" "$PACKAGE_DIR/" 2>/dev/null || true
     echo "✓ setup.sh کپی شد"
 fi
-if [ -f "\$SCRIPT_DIR/setup_fa.sh" ]; then
-    cp "\$SCRIPT_DIR/setup_fa.sh" "\$PACKAGE_DIR/" 2>/dev/null || true
+if [ -f "$SCRIPT_DIR/setup_fa.sh" ]; then
+    cp "$SCRIPT_DIR/setup_fa.sh" "$PACKAGE_DIR/" 2>/dev/null || true
     echo "✓ setup_fa.sh کپی شد"
 fi
-if [ -f "\$SCRIPT_DIR/setup_en.sh" ]; then
-    cp "\$SCRIPT_DIR/setup_en.sh" "\$PACKAGE_DIR/" 2>/dev/null || true
+if [ -f "$SCRIPT_DIR/setup_en.sh" ]; then
+    cp "$SCRIPT_DIR/setup_en.sh" "$PACKAGE_DIR/" 2>/dev/null || true
     echo "✓ setup_en.sh کپی شد"
 fi
-if [ -f "\$SCRIPT_DIR/config_client.yaml" ]; then
-    cp "\$SCRIPT_DIR/config_client.yaml" "\$PACKAGE_DIR/" 2>/dev/null || true
+if [ -f "$SCRIPT_DIR/config_client.yaml" ]; then
+    cp "$SCRIPT_DIR/config_client.yaml" "$PACKAGE_DIR/" 2>/dev/null || true
     echo "✓ config_client.yaml کپی شد"
 fi
 TEMP_EOF
