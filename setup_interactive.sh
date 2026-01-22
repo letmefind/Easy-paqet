@@ -79,10 +79,68 @@ msg_title "📋 Network Information Collection" "📋 جمع‌آوری اطلا
 
 # پیدا کردن اینترفیس‌های شبکه / Finding network interfaces
 msg "🔹 Available network interfaces:" "🔹 اینترفیس‌های شبکه موجود:"
-ip -o link show | awk -F': ' '{print "   - " $2}' | grep -v lo
 echo ""
 
-INTERFACE=$(msg_prompt "Enter network interface name (e.g., eth0, ens3)" "نام اینترفیس شبکه را وارد کن (مثلا eth0, ens3)")
+# ساخت آرایه از اینترفیس‌ها
+INTERFACES=($(ip -o link show | awk -F': ' '{print $2}' | grep -v lo))
+INTERFACE_COUNT=${#INTERFACES[@]}
+
+# نمایش لیست اینترفیس‌ها با شماره
+if [ "$LANG" == "fa" ]; then
+    echo "لیست اینترفیس‌های موجود:"
+else
+    echo "Available interfaces list:"
+fi
+
+for i in "${!INTERFACES[@]}"; do
+    echo "  $((i+1))) ${INTERFACES[$i]}"
+done
+echo ""
+
+# انتخاب اینترفیس
+if [ "$LANG" == "fa" ]; then
+    read -p "کدوم اینترفیس رو می‌خوای؟ (شماره یا نام) [1-$INTERFACE_COUNT]: " interface_choice
+else
+    read -p "Which interface do you want? (number or name) [1-$INTERFACE_COUNT]: " interface_choice
+fi
+
+# چک کردن که آیا عدد وارد شده یا نام
+if [[ "$interface_choice" =~ ^[0-9]+$ ]]; then
+    # اگر عدد بود
+    if [ "$interface_choice" -ge 1 ] && [ "$interface_choice" -le "$INTERFACE_COUNT" ]; then
+        INTERFACE="${INTERFACES[$((interface_choice-1))]}"
+        if [ "$LANG" == "fa" ]; then
+            echo "✓ اینترفیس انتخاب شد: $INTERFACE"
+        else
+            echo "✓ Selected interface: $INTERFACE"
+        fi
+    else
+        if [ "$LANG" == "fa" ]; then
+            echo "❌ شماره نامعتبر! از لیست بالا انتخاب کن."
+        else
+            echo "❌ Invalid number! Please select from the list above."
+        fi
+        exit 1
+    fi
+else
+    # اگر نام وارد شده بود، چک کن که در لیست باشه
+    if [[ " ${INTERFACES[@]} " =~ " ${interface_choice} " ]]; then
+        INTERFACE="$interface_choice"
+        if [ "$LANG" == "fa" ]; then
+            echo "✓ اینترفیس انتخاب شد: $INTERFACE"
+        else
+            echo "✓ Selected interface: $INTERFACE"
+        fi
+    else
+        if [ "$LANG" == "fa" ]; then
+            echo "❌ اینترفیس پیدا نشد! از لیست بالا انتخاب کن."
+        else
+            echo "❌ Interface not found! Please select from the list above."
+        fi
+        exit 1
+    fi
+fi
+echo ""
 
 # پیدا کردن آی‌پی محلی / Finding local IP
 LOCAL_IP=$(ip -4 addr show $INTERFACE 2>/dev/null | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -1)
