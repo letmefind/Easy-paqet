@@ -502,7 +502,6 @@ if [ "$ROLE" == "server" ]; then
                         fi
                     fi
                 fi
-            fi
         fi
         
         # پیدا کردن مسیر paqet - مدیریت مسیرهای نسبی به درستی
