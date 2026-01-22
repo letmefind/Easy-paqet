@@ -506,7 +506,6 @@ if [ "$ROLE" == "server" ]; then
                         fi
                     fi
                 fi
-            fi
         fi
         
         # Find paqet path - handle relative paths correctly
