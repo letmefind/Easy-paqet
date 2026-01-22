@@ -322,36 +322,61 @@ else
             # استفاده از GitHub API برای پیدا کردن آخرین release و فایل‌های موجود
             if command -v curl &> /dev/null; then
                 echo "   در حال بررسی آخرین release..."
-                LATEST_RELEASE=$(curl -s https://api.github.com/repos/hanselime/paqet/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+                RELEASE_INFO=$(curl -s https://api.github.com/repos/hanselime/paqet/releases/latest)
+                LATEST_RELEASE=$(echo "$RELEASE_INFO" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
                 
                 if [ -n "$LATEST_RELEASE" ]; then
                     echo "   آخرین نسخه پیدا شد: $LATEST_RELEASE"
                     
-                    # لیست نام‌های ممکن فایل
-                    POSSIBLE_NAMES=(
-                        "paqet-linux-amd64"
-                        "paqet_linux_amd64"
-                        "paqet-linux_amd64"
-                        "paqet_linux-amd64"
-                        "paqet_${LATEST_RELEASE}_linux_amd64"
-                        "paqet-${LATEST_RELEASE}-linux-amd64"
-                    )
+                    # استخراج نام فایل‌های موجود از API
+                    ASSET_NAMES=$(echo "$RELEASE_INFO" | grep '"name":' | grep -i 'linux.*amd64\|amd64.*linux' | sed -E 's/.*"name":\s*"([^"]+)".*/\1/' | head -1)
                     
                     DOWNLOAD_SUCCESS=false
-                    for FILENAME in "${POSSIBLE_NAMES[@]}"; do
-                        DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${FILENAME}"
-                        echo "   امتحان: $FILENAME..."
-                        if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
-                            wget "$DOWNLOAD_URL" -O paqet
-                            if [ $? -eq 0 ] && [ -f "./paqet" ]; then
-                                chmod +x paqet
-                                PAQET_CMD="./paqet"
-                                echo "✓ Paqet دانلود شد ($FILENAME)"
-                                DOWNLOAD_SUCCESS=true
-                                break
+                    
+                    # اول فایل‌های واقعی موجود در release رو امتحان کن
+                    if [ -n "$ASSET_NAMES" ]; then
+                        for ASSET_NAME in $ASSET_NAMES; do
+                            DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${ASSET_NAME}"
+                            echo "   امتحان فایل واقعی: $ASSET_NAME..."
+                            if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
+                                wget "$DOWNLOAD_URL" -O paqet
+                                if [ $? -eq 0 ] && [ -f "./paqet" ]; then
+                                    chmod +x paqet
+                                    PAQET_CMD="./paqet"
+                                    echo "✓ Paqet دانلود شد ($ASSET_NAME)"
+                                    DOWNLOAD_SUCCESS=true
+                                    break
+                                fi
                             fi
-                        fi
-                    done
+                        done
+                    fi
+                    
+                    # اگر پیدا نشد، نام‌های ممکن رو امتحان کن
+                    if [ "$DOWNLOAD_SUCCESS" == false ]; then
+                        POSSIBLE_NAMES=(
+                            "paqet-linux-amd64"
+                            "paqet_linux_amd64"
+                            "paqet-linux_amd64"
+                            "paqet_linux-amd64"
+                            "paqet_${LATEST_RELEASE}_linux_amd64"
+                            "paqet-${LATEST_RELEASE}-linux-amd64"
+                        )
+                        
+                        for FILENAME in "${POSSIBLE_NAMES[@]}"; do
+                            DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${FILENAME}"
+                            echo "   امتحان: $FILENAME..."
+                            if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
+                                wget "$DOWNLOAD_URL" -O paqet
+                                if [ $? -eq 0 ] && [ -f "./paqet" ]; then
+                                    chmod +x paqet
+                                    PAQET_CMD="./paqet"
+                                    echo "✓ Paqet دانلود شد ($FILENAME)"
+                                    DOWNLOAD_SUCCESS=true
+                                    break
+                                fi
+                            fi
+                        done
+                    fi
                     
                     if [ "$DOWNLOAD_SUCCESS" == false ]; then
                         echo ""
