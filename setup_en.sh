@@ -335,8 +335,73 @@ if [ "$ROLE" == "server" ]; then
         echo ""
         echo "Creating offline package..."
         
-        # Find paqet path
-        PAQET_PATH=$(readlink -f "$PAQET_CMD" 2>/dev/null || realpath "$PAQET_CMD" 2>/dev/null || echo "$(pwd)/$PAQET_CMD")
+        # Check if paqet exists, if not download it first
+        if [ -z "$PAQET_CMD" ] || [ "$PAQET_CMD" == "paqet" ]; then
+            if ! command -v paqet &> /dev/null && [ ! -f "./paqet" ]; then
+                echo "⚠️  Paqet binary not found. Downloading it first..."
+                
+                # Detect operating system and architecture
+                OS=""
+                ARCH=""
+                
+                case "$(uname -s)" in
+                    Linux*)     OS="linux" ;;
+                    Darwin*)    OS="darwin" ;;
+                    *)          OS="linux" ;;
+                esac
+                
+                case "$(uname -m)" in
+                    x86_64|amd64)   ARCH="amd64" ;;
+                    aarch64|arm64)  ARCH="arm64" ;;
+                    *)              ARCH="amd64" ;;
+                esac
+                
+                if command -v curl &> /dev/null; then
+                    RELEASE_INFO=$(curl -s https://api.github.com/repos/hanselime/paqet/releases/latest)
+                    LATEST_RELEASE=$(echo "$RELEASE_INFO" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+                    
+                    if [ -n "$LATEST_RELEASE" ]; then
+                        CORRECT_FILENAME="paqet-${OS}-${ARCH}-${LATEST_RELEASE}.tar.gz"
+                        DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${CORRECT_FILENAME}"
+                        
+                        if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
+                            TEMP_FILE=$(mktemp)
+                            wget "$DOWNLOAD_URL" -O "$TEMP_FILE" 2>/dev/null
+                            
+                            if [ $? -eq 0 ] && [ -f "$TEMP_FILE" ]; then
+                                tar -xzf "$TEMP_FILE" -C . 2>/dev/null
+                                rm "$TEMP_FILE"
+                                
+                                if [ -f "./paqet" ]; then
+                                    chmod +x paqet
+                                    PAQET_CMD="./paqet"
+                                else
+                                    PAQET_FILE=$(find . -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
+                                    if [ -n "$PAQET_FILE" ]; then
+                                        mv "$PAQET_FILE" ./paqet
+                                        chmod +x paqet
+                                        PAQET_CMD="./paqet"
+                                    fi
+                                fi
+                            fi
+                        fi
+                    fi
+                fi
+            fi
+        fi
+        
+        # Find paqet path - handle relative paths correctly
+        if [[ "$PAQET_CMD" == ./* ]]; then
+            PAQET_PATH="$(cd "$(dirname "$PAQET_CMD")" && pwd)/$(basename "$PAQET_CMD")"
+        elif [[ "$PAQET_CMD" == /* ]]; then
+            PAQET_PATH="$PAQET_CMD"
+        elif command -v "$PAQET_CMD" &> /dev/null; then
+            PAQET_PATH=$(command -v "$PAQET_CMD")
+        elif [ -f "./paqet" ]; then
+            PAQET_PATH="$(pwd)/paqet"
+        else
+            PAQET_PATH=""
+        fi
         
         # Get current script directory (where setup scripts are)
         CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

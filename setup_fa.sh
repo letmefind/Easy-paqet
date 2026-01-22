@@ -335,8 +335,73 @@ if [ "$ROLE" == "server" ]; then
         echo ""
         echo "در حال ساخت بسته Offline..."
         
-        # پیدا کردن مسیر paqet
-        PAQET_PATH=$(readlink -f "$PAQET_CMD" 2>/dev/null || realpath "$PAQET_CMD" 2>/dev/null || echo "$(pwd)/$PAQET_CMD")
+        # بررسی وجود paqet، اگر نیست ابتدا دانلود کن
+        if [ -z "$PAQET_CMD" ] || [ "$PAQET_CMD" == "paqet" ]; then
+            if ! command -v paqet &> /dev/null && [ ! -f "./paqet" ]; then
+                echo "⚠️  باینری Paqet پیدا نشد. در حال دانلود..."
+                
+                # تشخیص سیستم عامل و معماری
+                OS=""
+                ARCH=""
+                
+                case "$(uname -s)" in
+                    Linux*)     OS="linux" ;;
+                    Darwin*)    OS="darwin" ;;
+                    *)          OS="linux" ;;
+                esac
+                
+                case "$(uname -m)" in
+                    x86_64|amd64)   ARCH="amd64" ;;
+                    aarch64|arm64)  ARCH="arm64" ;;
+                    *)              ARCH="amd64" ;;
+                esac
+                
+                if command -v curl &> /dev/null; then
+                    RELEASE_INFO=$(curl -s https://api.github.com/repos/hanselime/paqet/releases/latest)
+                    LATEST_RELEASE=$(echo "$RELEASE_INFO" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+                    
+                    if [ -n "$LATEST_RELEASE" ]; then
+                        CORRECT_FILENAME="paqet-${OS}-${ARCH}-${LATEST_RELEASE}.tar.gz"
+                        DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${CORRECT_FILENAME}"
+                        
+                        if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
+                            TEMP_FILE=$(mktemp)
+                            wget "$DOWNLOAD_URL" -O "$TEMP_FILE" 2>/dev/null
+                            
+                            if [ $? -eq 0 ] && [ -f "$TEMP_FILE" ]; then
+                                tar -xzf "$TEMP_FILE" -C . 2>/dev/null
+                                rm "$TEMP_FILE"
+                                
+                                if [ -f "./paqet" ]; then
+                                    chmod +x paqet
+                                    PAQET_CMD="./paqet"
+                                else
+                                    PAQET_FILE=$(find . -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
+                                    if [ -n "$PAQET_FILE" ]; then
+                                        mv "$PAQET_FILE" ./paqet
+                                        chmod +x paqet
+                                        PAQET_CMD="./paqet"
+                                    fi
+                                fi
+                            fi
+                        fi
+                    fi
+                fi
+            fi
+        fi
+        
+        # پیدا کردن مسیر paqet - مدیریت مسیرهای نسبی به درستی
+        if [[ "$PAQET_CMD" == ./* ]]; then
+            PAQET_PATH="$(cd "$(dirname "$PAQET_CMD")" && pwd)/$(basename "$PAQET_CMD")"
+        elif [[ "$PAQET_CMD" == /* ]]; then
+            PAQET_PATH="$PAQET_CMD"
+        elif command -v "$PAQET_CMD" &> /dev/null; then
+            PAQET_PATH=$(command -v "$PAQET_CMD")
+        elif [ -f "./paqet" ]; then
+            PAQET_PATH="$(pwd)/paqet"
+        else
+            PAQET_PATH=""
+        fi
         
         # گرفتن مسیر دایرکتوری فعلی (جایی که اسکریپت‌های setup هستند)
         CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -376,10 +441,14 @@ if [ -f "$SCRIPT_DIR/config_client.yaml" ]; then
 fi
 
 # کپی paqet
-if [ -f "$PAQET_BINARY" ]; then
+if [ -n "$PAQET_BINARY" ] && [ -f "$PAQET_BINARY" ]; then
     cp "$PAQET_BINARY" "$PACKAGE_DIR/paqet"
     chmod +x "$PACKAGE_DIR/paqet"
     echo "✓ فایل paqet کپی شد"
+else
+    echo "⚠️  باینری Paqet پیدا نشد در: $PAQET_BINARY"
+    echo "   بسته بدون باینری paqet ساخته می‌شه."
+    echo "   باید دستی روی سرور کلاینت دانلود کنی."
 fi
 
 # ذخیره کلید
