@@ -15,8 +15,9 @@ listen:
 # تنظیمات شبکه
 network:
   interface: "eth0"  # CHANGE ME: نام اینترفیس شبکه سرور B را اینجا بذار (مثلا eth0, ens3, en0)
-  local_addr: "YOUR_SERVER_B_IP:9999"  # CHANGE ME: آی‌پی سرور B و پورت (باید با listen.addr یکسان باشه)
-  router_mac: "00:00:00:00:00:00"  # CHANGE ME: MAC آدرس روتر سرور B را اینجا بذار
+  ipv4:
+    addr: "YOUR_SERVER_B_IP:9999"  # CHANGE ME: آی‌پی سرور B و پورت (باید با listen.addr یکسان باشه)
+    router_mac: "00:00:00:00:00:00"  # CHANGE ME: MAC آدرس روتر سرور B را اینجا بذار
   
   # تنظیمات PCAP (اختیاری - مقادیر پیش‌فرض استفاده می‌شه)
   pcap:
