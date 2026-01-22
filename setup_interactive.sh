@@ -3,28 +3,38 @@
 # اسکریپت راه‌اندازی تعاملی Paqet
 # این اسکریپت مرحله به مرحله ازت سوال می‌پرسه و همه کارها رو انجام می‌ده
 
+# تنظیم locale برای نمایش بهتر فارسی
+export LC_ALL=C.UTF-8 2>/dev/null || export LANG=C.UTF-8 2>/dev/null
+
+# اگر terminal از RTL پشتیبانی نمی‌کنه، این پیام رو نشون بده
+if [ -t 1 ]; then
+    # چک کردن اینکه آیا terminal از bidirectional text پشتیبانی می‌کنه
+    # اگر مشکل داری، می‌تونی از terminal emulator دیگه‌ای استفاده کنی
+    # مثل: tmux, screen, یا terminal های مدرن مثل Alacritty, Kitty
+fi
+
 clear
-echo "╔════════════════════════════════════════════════════════╗"
-echo "║     راه‌اندازی تعاملی Paqet - Interactive Setup      ║"
-echo "╚════════════════════════════════════════════════════════╝"
+print_fa "╔════════════════════════════════════════════════════════╗"
+print_fa "║     راه‌اندازی تعاملی Paqet - Interactive Setup      ║"
+print_fa "╚════════════════════════════════════════════════════════╝"
 echo ""
 
 # تشخیص نوع سرور
-echo "🔹 این سرور کلاینت است (A) یا سرور (B)?"
+print_fa "🔹 این سرور کلاینت است (A) یا سرور (B)?"
 read -p "   [A/B]: " server_type
 
 if [[ "$server_type" == "A" || "$server_type" == "a" ]]; then
     ROLE="client"
     CONFIG_FILE="config_client.yaml"
     SERVER_NAME="کلاینت"
-    echo "✓ حالت کلاینت انتخاب شد"
+    print_fa "✓ حالت کلاینت انتخاب شد"
 elif [[ "$server_type" == "B" || "$server_type" == "b" ]]; then
     ROLE="server"
     CONFIG_FILE="config_server.yaml"
     SERVER_NAME="سرور"
-    echo "✓ حالت سرور انتخاب شد"
+    print_fa "✓ حالت سرور انتخاب شد"
 else
-    echo "❌ انتخاب نامعتبر!"
+    print_fa "❌ انتخاب نامعتبر!"
     exit 1
 fi
 
