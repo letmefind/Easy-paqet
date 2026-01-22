@@ -333,8 +333,31 @@ else
                     
                     DOWNLOAD_SUCCESS=false
                     
-                    # First try actual files from release
-                    if [ -n "$ASSET_NAMES" ]; then
+                    # First try correct format: paqet-linux-amd64-${LATEST_RELEASE}.tar.gz
+                    CORRECT_FILENAME="paqet-linux-amd64-${LATEST_RELEASE}.tar.gz"
+                    DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${CORRECT_FILENAME}"
+                    echo "   Trying correct format: $CORRECT_FILENAME..."
+                    
+                    if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
+                        TEMP_FILE=$(mktemp)
+                        wget "$DOWNLOAD_URL" -O "$TEMP_FILE" 2>/dev/null
+                        
+                        if [ $? -eq 0 ] && [ -f "$TEMP_FILE" ]; then
+                            echo "   Extracting from tar.gz..."
+                            tar -xzf "$TEMP_FILE" -C . 2>/dev/null
+                            rm "$TEMP_FILE"
+                            # Find extracted paqet file
+                            if [ -f "./paqet" ]; then
+                                chmod +x paqet
+                                PAQET_CMD="./paqet"
+                                echo "✓ Paqet downloaded and extracted ($CORRECT_FILENAME)"
+                                DOWNLOAD_SUCCESS=true
+                            fi
+                        fi
+                    fi
+                    
+                    # If not found, try actual files from release
+                    if [ "$DOWNLOAD_SUCCESS" == false ] && [ -n "$ASSET_NAMES" ]; then
                         for ASSET_NAME in $ASSET_NAMES; do
                             DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${ASSET_NAME}"
                             echo "   Trying actual file: $ASSET_NAME..."
@@ -378,33 +401,6 @@ else
                                         DOWNLOAD_SUCCESS=true
                                         break
                                     fi
-                                fi
-                            fi
-                        done
-                    fi
-                    
-                    # If not found, try possible names
-                    if [ "$DOWNLOAD_SUCCESS" == false ]; then
-                        POSSIBLE_NAMES=(
-                            "paqet-linux-amd64"
-                            "paqet_linux_amd64"
-                            "paqet-linux_amd64"
-                            "paqet_linux-amd64"
-                            "paqet_${LATEST_RELEASE}_linux_amd64"
-                            "paqet-${LATEST_RELEASE}-linux-amd64"
-                        )
-                        
-                        for FILENAME in "${POSSIBLE_NAMES[@]}"; do
-                            DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${FILENAME}"
-                            echo "   Trying: $FILENAME..."
-                            if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
-                                wget "$DOWNLOAD_URL" -O paqet
-                                if [ $? -eq 0 ] && [ -f "./paqet" ]; then
-                                    chmod +x paqet
-                                    PAQET_CMD="./paqet"
-                                    echo "✓ Paqet downloaded ($FILENAME)"
-                                    DOWNLOAD_SUCCESS=true
-                                    break
                                 fi
                             fi
                         done
