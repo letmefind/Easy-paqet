@@ -2,6 +2,9 @@
 
 # Paqet Interactive Setup Script - دو زبانه (Bilingual)
 # This script guides you step by step and does everything automatically
+# 
+# NOTE: This script is deprecated. Please use setup.sh instead!
+# This script is kept for backward compatibility.
 
 # تنظیم locale
 export LC_ALL=C.UTF-8 2>/dev/null || export LANG=C.UTF-8 2>/dev/null
@@ -11,6 +14,9 @@ clear
 echo "╔════════════════════════════════════════════════════════╗"
 echo "║     Paqet - Interactive Setup / راه‌اندازی تعاملی   ║"
 echo "╚════════════════════════════════════════════════════════╝"
+echo ""
+echo "⚠️  NOTE: This script is deprecated. Use './setup.sh' instead!"
+echo "⚠️  توجه: این اسکریپت قدیمی است. از './setup.sh' استفاده کن!"
 echo ""
 echo "Select Language / انتخاب زبان:"
 echo "  1) فارسی (Persian)"
