@@ -18,9 +18,9 @@ echo "  2) فارسی (Persian)"
 read -p "Choose [1/2]: " lang_choice
 
 if [[ "$lang_choice" == "1" ]]; then
-    LANG="en"
-else
     LANG="fa"
+else
+    LANG="en"
 fi
 
 # توابع نمایش پیام / Message display functions
