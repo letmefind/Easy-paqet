@@ -365,29 +365,95 @@ if [ "$ROLE" == "server" ]; then
                     LATEST_RELEASE=$(echo "$RELEASE_INFO" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
                     
                     if [ -n "$LATEST_RELEASE" ]; then
-                        CORRECT_FILENAME="paqet-${OS}-${ARCH}-${LATEST_RELEASE}.tar.gz"
+                        # تعیین فرمت فایل بر اساس سیستم عامل
+                        if [ "$OS" == "windows" ]; then
+                            FILE_EXT=".zip"
+                        else
+                            FILE_EXT=".tar.gz"
+                        fi
+                        
+                        CORRECT_FILENAME="paqet-${OS}-${ARCH}-${LATEST_RELEASE}${FILE_EXT}"
                         DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${CORRECT_FILENAME}"
+                        
+                        DOWNLOAD_SUCCESS=false
                         
                         if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
                             TEMP_FILE=$(mktemp)
                             wget "$DOWNLOAD_URL" -O "$TEMP_FILE" 2>/dev/null
                             
                             if [ $? -eq 0 ] && [ -f "$TEMP_FILE" ]; then
-                                tar -xzf "$TEMP_FILE" -C . 2>/dev/null
+                                if [ "$FILE_EXT" == ".tar.gz" ] || [ "$FILE_EXT" == ".tgz" ]; then
+                                    tar -xzf "$TEMP_FILE" -C . 2>/dev/null
+                                elif [ "$FILE_EXT" == ".zip" ]; then
+                                    unzip -q "$TEMP_FILE" -d . 2>/dev/null
+                                fi
                                 rm "$TEMP_FILE"
                                 
+                                # پیدا کردن فایل paqet استخراج شده
                                 if [ -f "./paqet" ]; then
                                     chmod +x paqet
                                     PAQET_CMD="./paqet"
+                                    DOWNLOAD_SUCCESS=true
                                 else
-                                    PAQET_FILE=$(find . -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
+                                    # جستجو برای فایل‌های paqet در پوشه‌های فرعی یا با نام‌های متفاوت
+                                    PAQET_FILE=$(find . -maxdepth 2 -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
                                     if [ -n "$PAQET_FILE" ]; then
                                         mv "$PAQET_FILE" ./paqet
                                         chmod +x paqet
                                         PAQET_CMD="./paqet"
+                                        DOWNLOAD_SUCCESS=true
                                     fi
                                 fi
                             fi
+                        fi
+                        
+                        # اگر پیدا نشد، فایل‌های واقعی موجود در release رو امتحان کن
+                        if [ "$DOWNLOAD_SUCCESS" == false ]; then
+                            # استخراج نام فایل‌های موجود از API که با OS و ARCH مطابقت دارن
+                            ASSET_NAMES=$(echo "$RELEASE_INFO" | python3 -c "import sys, json; data=json.load(sys.stdin); print('\n'.join([a['name'] for a in data.get('assets', []) if '$OS' in a['name'].lower() and '$ARCH' in a['name'].lower()]))" 2>/dev/null || echo "$RELEASE_INFO" | grep '"name":' | grep -i "$OS.*$ARCH\|$ARCH.*$OS" | sed -E 's/.*"name":\s*"([^"]+)".*/\1/')
+                            
+                            if [ -n "$ASSET_NAMES" ]; then
+                                for ASSET_NAME in $ASSET_NAMES; do
+                                    DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${ASSET_NAME}"
+                                    
+                                    if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
+                                        TEMP_FILE=$(mktemp)
+                                        wget "$DOWNLOAD_URL" -O "$TEMP_FILE" 2>/dev/null
+                                        
+                                        if [ $? -eq 0 ] && [ -f "$TEMP_FILE" ]; then
+                                            if [[ "$ASSET_NAME" == *.tar.gz ]] || [[ "$ASSET_NAME" == *.tgz ]]; then
+                                                tar -xzf "$TEMP_FILE" -C . 2>/dev/null
+                                            elif [[ "$ASSET_NAME" == *.zip ]]; then
+                                                unzip -q "$TEMP_FILE" -d . 2>/dev/null
+                                            fi
+                                            rm "$TEMP_FILE"
+                                            
+                                            # پیدا کردن فایل paqet استخراج شده
+                                            if [ -f "./paqet" ]; then
+                                                chmod +x paqet
+                                                PAQET_CMD="./paqet"
+                                                DOWNLOAD_SUCCESS=true
+                                                break
+                                            else
+                                                PAQET_FILE=$(find . -maxdepth 2 -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
+                                                if [ -n "$PAQET_FILE" ]; then
+                                                    mv "$PAQET_FILE" ./paqet
+                                                    chmod +x paqet
+                                                    PAQET_CMD="./paqet"
+                                                    DOWNLOAD_SUCCESS=true
+                                                    break
+                                                fi
+                                            fi
+                                        fi
+                                    fi
+                                done
+                            fi
+                        fi
+                        
+                        if [ "$DOWNLOAD_SUCCESS" == true ]; then
+                            echo "✓ Paqet با موفقیت دانلود شد"
+                        else
+                            echo "⚠️  دانلود Paqet ناموفق بود. بسته بدون باینری ساخته می‌شه."
                         fi
                     fi
                 fi
