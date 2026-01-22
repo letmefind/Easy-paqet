@@ -318,10 +318,53 @@ else
         
         if [[ "$DOWNLOAD" != "n" && "$DOWNLOAD" != "N" ]]; then
             echo "Downloading paqet..."
-            wget https://github.com/hanselime/paqet/releases/latest/download/paqet-linux-amd64 -O paqet
-            chmod +x paqet
-            PAQET_CMD="./paqet"
-            echo "✓ Paqet downloaded"
+            
+            # List of possible filenames
+            POSSIBLE_NAMES=(
+                "paqet-linux-amd64"
+                "paqet_linux_amd64"
+                "paqet-linux_amd64"
+                "paqet_linux-amd64"
+            )
+            
+            DOWNLOAD_SUCCESS=false
+            for FILENAME in "${POSSIBLE_NAMES[@]}"; do
+                echo "   Trying: $FILENAME..."
+                if wget -q --spider https://github.com/hanselime/paqet/releases/latest/download/$FILENAME 2>/dev/null; then
+                    wget https://github.com/hanselime/paqet/releases/latest/download/$FILENAME -O paqet
+                    if [ $? -eq 0 ] && [ -f "./paqet" ]; then
+                        chmod +x paqet
+                        PAQET_CMD="./paqet"
+                        echo "✓ Paqet downloaded ($FILENAME)"
+                        DOWNLOAD_SUCCESS=true
+                        break
+                    fi
+                fi
+            done
+            
+            if [ "$DOWNLOAD_SUCCESS" == false ]; then
+                echo ""
+                echo "❌ Automatic download failed!"
+                echo ""
+                echo "Please download manually from:"
+                echo "   https://github.com/hanselime/paqet/releases/latest"
+                echo ""
+                echo "Or use this command:"
+                echo "   wget https://github.com/hanselime/paqet/releases/download/v1.0.0-alpha.6/paqet_linux_amd64 -O paqet"
+                echo ""
+                read -p "Did you download the file manually and is it in this directory? [Y/n]: " MANUAL_DOWNLOAD
+                if [[ "$MANUAL_DOWNLOAD" != "n" && "$MANUAL_DOWNLOAD" != "N" ]]; then
+                    if [ -f "./paqet" ]; then
+                        chmod +x paqet
+                        PAQET_CMD="./paqet"
+                        echo "✓ Paqet file found"
+                    else
+                        PAQET_CMD="paqet"
+                    fi
+                else
+                    PAQET_CMD="paqet"
+                fi
+            fi
         else
             PAQET_CMD="paqet"
         fi
