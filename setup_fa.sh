@@ -425,15 +425,15 @@ else
                             echo "   در حال استخراج از tar.gz..."
                             tar -xzf "$TEMP_FILE" -C . 2>/dev/null
                             rm "$TEMP_FILE"
-                            # پیدا کردن فایل paqet استخراج شده (ممکنه در یک پوشه باشه)
+                            # پیدا کردن فایل paqet استخراج شده (ممکنه در یک پوشه باشه یا اسم متفاوت داشته باشه)
                             if [ -f "./paqet" ]; then
                                 chmod +x paqet
                                 PAQET_CMD="./paqet"
                                 echo "✓ Paqet دانلود و استخراج شد ($CORRECT_FILENAME)"
                                 DOWNLOAD_SUCCESS=true
                             else
-                                # جستجو برای paqet در پوشه‌های زیر
-                                PAQET_FILE=$(find . -name "paqet" -type f 2>/dev/null | head -1)
+                                # جستجو برای فایل‌های paqet (paqet, paqet_linux_amd64 و غیره)
+                                PAQET_FILE=$(find . -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
                                 if [ -n "$PAQET_FILE" ]; then
                                     mv "$PAQET_FILE" ./paqet
                                     chmod +x paqet
@@ -466,7 +466,7 @@ else
                                         echo "   در حال استخراج از tar.gz..."
                                         tar -xzf "$TEMP_FILE" -C . 2>/dev/null
                                         rm "$TEMP_FILE"
-                                        # پیدا کردن فایل paqet استخراج شده (ممکنه در یک پوشه باشه)
+                                        # پیدا کردن فایل paqet استخراج شده (ممکنه در یک پوشه باشه یا اسم متفاوت داشته باشه)
                                         if [ -f "./paqet" ]; then
                                             chmod +x paqet
                                             PAQET_CMD="./paqet"
@@ -474,8 +474,8 @@ else
                                             DOWNLOAD_SUCCESS=true
                                             break
                                         else
-                                            # جستجو برای paqet در پوشه‌های زیر
-                                            PAQET_FILE=$(find . -name "paqet" -type f 2>/dev/null | head -1)
+                                            # جستجو برای فایل‌های paqet (paqet, paqet_linux_amd64 و غیره)
+                                            PAQET_FILE=$(find . -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
                                             if [ -n "$PAQET_FILE" ]; then
                                                 mv "$PAQET_FILE" ./paqet
                                                 chmod +x paqet
@@ -496,8 +496,8 @@ else
                                             DOWNLOAD_SUCCESS=true
                                             break
                                         else
-                                            # جستجو برای paqet در پوشه‌های زیر
-                                            PAQET_FILE=$(find . -name "paqet" -type f 2>/dev/null | head -1)
+                                            # جستجو برای فایل‌های paqet (paqet, paqet_linux_amd64 و غیره)
+                                            PAQET_FILE=$(find . -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
                                             if [ -n "$PAQET_FILE" ]; then
                                                 mv "$PAQET_FILE" ./paqet
                                                 chmod +x paqet

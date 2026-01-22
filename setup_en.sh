@@ -425,15 +425,15 @@ else
                             echo "   Extracting from tar.gz..."
                             tar -xzf "$TEMP_FILE" -C . 2>/dev/null
                             rm "$TEMP_FILE"
-                            # Find extracted paqet file (might be in a subdirectory)
+                            # Find extracted paqet file (might be in a subdirectory or have different name)
                             if [ -f "./paqet" ]; then
                                 chmod +x paqet
                                 PAQET_CMD="./paqet"
                                 echo "✓ Paqet downloaded and extracted ($CORRECT_FILENAME)"
                                 DOWNLOAD_SUCCESS=true
                             else
-                                # Look for paqet in subdirectories
-                                PAQET_FILE=$(find . -name "paqet" -type f 2>/dev/null | head -1)
+                                # Look for paqet files (paqet, paqet_linux_amd64, etc.)
+                                PAQET_FILE=$(find . -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
                                 if [ -n "$PAQET_FILE" ]; then
                                     mv "$PAQET_FILE" ./paqet
                                     chmod +x paqet
@@ -466,7 +466,7 @@ else
                                         echo "   Extracting from tar.gz..."
                                         tar -xzf "$TEMP_FILE" -C . 2>/dev/null
                                         rm "$TEMP_FILE"
-                                        # Find extracted paqet file (might be in a subdirectory)
+                                        # Find extracted paqet file (might be in a subdirectory or have different name)
                                         if [ -f "./paqet" ]; then
                                             chmod +x paqet
                                             PAQET_CMD="./paqet"
@@ -474,8 +474,8 @@ else
                                             DOWNLOAD_SUCCESS=true
                                             break
                                         else
-                                            # Look for paqet in subdirectories
-                                            PAQET_FILE=$(find . -name "paqet" -type f 2>/dev/null | head -1)
+                                            # Look for paqet files (paqet, paqet_linux_amd64, etc.)
+                                            PAQET_FILE=$(find . -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
                                             if [ -n "$PAQET_FILE" ]; then
                                                 mv "$PAQET_FILE" ./paqet
                                                 chmod +x paqet
@@ -496,8 +496,8 @@ else
                                             DOWNLOAD_SUCCESS=true
                                             break
                                         else
-                                            # Look for paqet in subdirectories
-                                            PAQET_FILE=$(find . -name "paqet" -type f 2>/dev/null | head -1)
+                                            # Look for paqet files (paqet, paqet_linux_amd64, etc.)
+                                            PAQET_FILE=$(find . -type f \( -name "paqet" -o -name "paqet_*" -o -name "paqet-*" \) ! -name "*.tar.gz" ! -name "*.zip" ! -name "*.md" ! -name "*.yaml" ! -name "*.sh" 2>/dev/null | head -1)
                                             if [ -n "$PAQET_FILE" ]; then
                                                 mv "$PAQET_FILE" ./paqet
                                                 chmod +x paqet
