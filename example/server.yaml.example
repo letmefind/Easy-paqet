@@ -1,0 +1,61 @@
+# paqet Server Configuration Example  
+# Role must be explicitly set
+role: "server"
+
+# Logging configuration
+log:
+  level: "info"  # none, debug, info, warn, error, fatal
+
+# Server listen configuration
+listen:
+  addr: ":9999"  # CHANGE ME: Server listen port (must match network.local_addr port)
+
+# Network interface settings
+network:
+  interface: "eth0"                          # CHANGE ME: Network interface (eth0, ens3, en0, etc.)
+  local_addr: "10.0.0.100:9999"              # CHANGE ME: Server IP and port (port must match listen.addr)
+  router_mac: "aa:bb:cc:dd:ee:ff"            # CHANGE ME: Gateway/router MAC address
+  
+  # PCAP settings (optional - will use defaults)
+  pcap:
+    sockbuf: 8388608  # 8MB buffer (default for server)
+  
+  # TCP flags for packet crafting (optional - will use defaults)
+  tcp:
+    local_flag: ["PA"]   # Local TCP flags (Push+Ack default)
+
+# Transport protocol configuration
+transport:
+  protocol: "kcp"  # Transport protocol (currently only "kcp" supported)
+  conn: 1          # Number of connections (1-256, default: 1)
+  
+  # KCP protocol settings
+  kcp:
+    mode: "fast"           # KCP mode: normal, fast, fast2, fast3
+    mtu: 1350              # Maximum transmission unit (50-1500)
+    rcvwnd: 1024           # Receive window size (default for server)
+    sndwnd: 1024           # Send window size (default for server)
+    
+    # Encryption settings  
+    block: "aes"                    # Encryption: none, aes, blowfish, cast5, sm4, salsa20, etc.
+    key: "your-secret-key-here"     # CHANGE ME: Secret key (must match client)
+    
+    # Buffer settings (optional - good defaults provided)
+    smuxbuf: 4194304       # 4MB SMUX buffer
+    streambuf: 2097152     # 2MB stream buffer
+
+# Optional Forward Error Correction (FEC) - currently disabled
+# Use these only if you need FEC for very lossy networks:
+#   dshard: 10    # Data shards for FEC  
+#   pshard: 3     # Parity shards for FEC
+
+# Important: Server Firewall Configuration Required!
+# 
+# Since paqet uses pcap to bypass standard firewalls, you MUST configure
+# iptables on the server to prevent kernel interference:
+#
+# sudo iptables -t raw -A PREROUTING -p tcp --dport 9999 -j NOTRACK
+# sudo iptables -t raw -A OUTPUT -p tcp --sport 9999 -j NOTRACK  
+# sudo iptables -t mangle -A OUTPUT -p tcp --sport 9999 --tcp-flags RST RST -j DROP
+#
+# Replace 9999 with your actual listen port.

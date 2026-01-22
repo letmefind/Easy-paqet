@@ -1,0 +1,86 @@
+name: Build Linux Self-Hosted
+
+on:
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+jobs:
+    build-linux-selfhosted:
+        runs-on: self-hosted
+        container:
+            image: golang:1.25
+        strategy:
+            matrix:
+                goarch: [amd64, arm64]
+
+        steps:
+            - name: Setup Build Environment
+              run: |
+                  set -e
+                  apt-get update
+                  if [ "${{ matrix.goarch }}" = "arm64" ]; then
+                    dpkg --add-architecture arm64
+                    apt-get update
+                    apt-get install -y --no-install-recommends gcc-aarch64-linux-gnu libc6-dev-arm64-cross libpcap-dev:arm64
+                  else
+                    apt-get install -y --no-install-recommends build-essential libpcap-dev
+                  fi
+
+            - name: Checkout Code
+              uses: actions/checkout@v5
+
+            - name: Mark repo as safe
+              run: git config --global --add safe.directory $GITHUB_WORKSPACE
+
+            - name: Get tag or commit
+              id: ref_id
+              shell: bash
+              run: |
+                  if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+                    REF_ID="${GITHUB_REF#refs/tags/}"
+                    echo "Triggered by tag: $REF_ID"
+                  else
+                    REF_ID=$(git rev-parse --short HEAD)
+                    echo "No tag detected. Using commit hash: $REF_ID"
+                  fi
+                  echo "ref=$REF_ID" >> $GITHUB_OUTPUT
+
+            - name: Build
+              run: |
+                  mkdir -p dist
+                  export CGO_ENABLED=1 
+                  export GOOS=linux 
+                  export GOARCH=${{ matrix.goarch }}
+                  export VERSION=${{ steps.ref_id.outputs.ref }}
+                  export GIT_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+                  export GIT_TAG=$(git describe --tags --exact-match 2>/dev/null || echo "unknown")
+                  export BUILD_TIME=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+
+                  # Set the C compiler for cross-compilation
+                  if [ "$GOARCH" = "arm64" ]; then
+                    export CC=aarch64-linux-gnu-gcc
+                  fi
+
+                  go build -v -a -trimpath \
+                    -ldflags "-s -w -buildid= \
+                    -X 'paqet/cmd/version.Version=${VERSION}' \
+                    -X 'paqet/cmd/version.GitCommit=${GIT_COMMIT}' \
+                    -X 'paqet/cmd/version.GitTag=${GIT_TAG}' \
+                    -X 'paqet/cmd/version.BuildTime=${BUILD_TIME}'" \
+                    -o paqet_linux_${{ matrix.goarch }} ./cmd/main.go
+
+                  chmod +x paqet_linux_${{ matrix.goarch }}
+                  tar -czvf dist/paqet-linux-${{ matrix.goarch }}-${{ steps.ref_id.outputs.ref }}.tar.gz \
+                    paqet_linux_${{ matrix.goarch }} \
+                    README.md \
+                    example/client.yaml.example \
+                    example/server.yaml.example
+
+            - name: Upload Artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: paqet-linux-${{ matrix.goarch }}
+                  path: dist/paqet-linux-${{ matrix.goarch }}-${{ steps.ref_id.outputs.ref }}.tar.gz
+                  retention-days: 7

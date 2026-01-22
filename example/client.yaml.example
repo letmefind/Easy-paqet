@@ -1,0 +1,63 @@
+# paqet Client Configuration Example
+# Role must be explicitly set
+role: "client"
+
+# Logging configuration
+log:
+  level: "info"  # none, debug, info, warn, error, fatal
+
+# SOCKS5 proxy configuration (client mode)
+socks5:
+  - listen: "127.0.0.1:1080"    # SOCKS5 proxy listen address
+    username: ""                # Optional SOCKS5 authentication
+    password: ""                # Optional SOCKS5 authentication
+
+# Alternative: Port forwarding configuration (instead of SOCKS5)
+# forward:
+#   - listen: "127.0.0.1:8080"  # Local port to listen on  
+#     target: "127.0.0.1:80"    # Target to forward to (via server)
+#     protocol: "tcp"           # Protocol (tcp/udp)
+
+# Network interface settings
+network:
+  interface: "en0"                          # CHANGE ME: Network interface (en0, eth0, wlan0, etc.)
+  local_addr: "192.168.1.100:0"             # CHANGE ME: Local IP and port for raw packets
+  router_mac: "aa:bb:cc:dd:ee:ff"           # CHANGE ME: Gateway/router MAC address
+  
+  # PCAP settings (optional - will use defaults)
+  pcap:
+    sockbuf: 4194304  # 4MB buffer (default for client)
+  
+  # TCP flags for packet crafting (optional - will use defaults)  
+  tcp:
+    local_flag: ["PA"]   # Local TCP flags (Push+Ack default)
+    remote_flag: ["PA"]  # Remote TCP flags (Push+Ack default)
+
+# Server connection settings
+server:
+  addr: "SERVER_IP:9999"  # CHANGE ME: paqet server address and port
+
+# Transport protocol configuration
+transport:
+  protocol: "kcp"  # Transport protocol (currently only "kcp" supported)
+  conn: 1          # Number of connections (1-256, default: 1)
+  
+  # KCP protocol settings
+  kcp:
+    mode: "fast"           # KCP mode: normal, fast, fast2, fast3
+    mtu: 1350              # Maximum transmission unit (50-1500)
+    rcvwnd: 512            # Receive window size (default for client)  
+    sndwnd: 512            # Send window size (default for client)
+    
+    # Encryption settings
+    block: "aes"                    # Encryption: none, aes, blowfish, cast5, sm4, salsa20, etc.
+    key: "your-secret-key-here"     # CHANGE ME: Secret key (must match server)
+    
+    # Buffer settings (optional - good defaults provided)
+    smuxbuf: 4194304       # 4MB SMUX buffer
+    streambuf: 2097152     # 2MB stream buffer
+
+# Optional Forward Error Correction (FEC) - currently disabled
+# Use these only if you need FEC for very lossy networks:
+#   dshard: 10    # Data shards for FEC
+#   pshard: 3     # Parity shards for FEC
