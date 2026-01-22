@@ -369,6 +369,31 @@ else
         if [[ "$DOWNLOAD" != "n" && "$DOWNLOAD" != "N" ]]; then
             echo "Downloading paqet..."
             
+            # Detect operating system and architecture
+            OS=""
+            ARCH=""
+            
+            # Detect OS
+            case "$(uname -s)" in
+                Linux*)     OS="linux" ;;
+                Darwin*)    OS="darwin" ;;
+                CYGWIN*)    OS="windows" ;;
+                MINGW*)     OS="windows" ;;
+                MSYS*)      OS="windows" ;;
+                *)          OS="linux" ;;  # Default
+            esac
+            
+            # Detect architecture
+            case "$(uname -m)" in
+                x86_64|amd64)   ARCH="amd64" ;;
+                aarch64|arm64)  ARCH="arm64" ;;
+                armv7l|armv6l)  ARCH="arm" ;;
+                *)              ARCH="amd64" ;;  # Default
+            esac
+            
+            echo "   Operating System: $OS"
+            echo "   Architecture: $ARCH"
+            
             # Use GitHub API to find latest release and available files
             if command -v curl &> /dev/null; then
                 echo "   Checking latest release..."
@@ -378,15 +403,19 @@ else
                 if [ -n "$LATEST_RELEASE" ]; then
                     echo "   Latest version found: $LATEST_RELEASE"
                     
-                    # Extract actual asset names from API (all linux amd64 files)
-                    ASSET_NAMES=$(echo "$RELEASE_INFO" | python3 -c "import sys, json; data=json.load(sys.stdin); print('\n'.join([a['name'] for a in data.get('assets', []) if 'linux' in a['name'].lower() and 'amd64' in a['name'].lower()]))" 2>/dev/null || echo "$RELEASE_INFO" | grep '"name":' | grep -i 'linux.*amd64\|amd64.*linux' | sed -E 's/.*"name":\s*"([^"]+)".*/\1/')
+                    # Determine file extension based on OS
+                    if [ "$OS" == "windows" ]; then
+                        FILE_EXT=".zip"
+                    else
+                        FILE_EXT=".tar.gz"
+                    fi
                     
-                    DOWNLOAD_SUCCESS=false
-                    
-                    # First try correct format: paqet-linux-amd64-${LATEST_RELEASE}.tar.gz
-                    CORRECT_FILENAME="paqet-linux-amd64-${LATEST_RELEASE}.tar.gz"
+                    # Build correct filename: paqet-OS-ARCH-VERSION.EXT
+                    CORRECT_FILENAME="paqet-${OS}-${ARCH}-${LATEST_RELEASE}${FILE_EXT}"
                     DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${CORRECT_FILENAME}"
                     echo "   Trying correct format: $CORRECT_FILENAME..."
+                    
+                    DOWNLOAD_SUCCESS=false
                     
                     if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
                         TEMP_FILE=$(mktemp)
@@ -407,10 +436,14 @@ else
                     fi
                     
                     # If not found, try actual files from release
-                    if [ "$DOWNLOAD_SUCCESS" == false ] && [ -n "$ASSET_NAMES" ]; then
-                        for ASSET_NAME in $ASSET_NAMES; do
-                            DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${ASSET_NAME}"
-                            echo "   Trying actual file: $ASSET_NAME..."
+                    if [ "$DOWNLOAD_SUCCESS" == false ]; then
+                        # Extract asset names from API that match OS and ARCH
+                        ASSET_NAMES=$(echo "$RELEASE_INFO" | python3 -c "import sys, json; data=json.load(sys.stdin); print('\n'.join([a['name'] for a in data.get('assets', []) if '$OS' in a['name'].lower() and '$ARCH' in a['name'].lower()]))" 2>/dev/null || echo "$RELEASE_INFO" | grep '"name":' | grep -i "$OS.*$ARCH\|$ARCH.*$OS" | sed -E 's/.*"name":\s*"([^"]+)".*/\1/')
+                        
+                        if [ -n "$ASSET_NAMES" ]; then
+                            for ASSET_NAME in $ASSET_NAMES; do
+                                DOWNLOAD_URL="https://github.com/hanselime/paqet/releases/download/${LATEST_RELEASE}/${ASSET_NAME}"
+                                echo "   Trying actual file: $ASSET_NAME..."
                             
                             # Download file
                             if wget -q --spider "$DOWNLOAD_URL" 2>/dev/null; then
