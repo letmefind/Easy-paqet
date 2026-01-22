@@ -1,62 +1,56 @@
-# paqet - Transport over Raw Packet
-
-[![Go Version](https://img.shields.io/badge/go-1.25+-blue.svg)](https://golang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-`paqet` یک پروکسی دوطرفه در سطح پکت است که با استفاده از raw sockets در Go ساخته شده است. این پروژه ترافیک را از یک کلاینت محلی به یک سرور ریموت منتقل می‌کند که سپس به سرویس‌های هدف متصل می‌شود. با کار در سطح پکت، کاملاً از پشته TCP/IP سیستم‌عامل میزبان عبور می‌کند و از KCP برای انتقال امن و قابل اعتماد استفاده می‌کند.
-
-> **⚠️ هشدار وضعیت توسعه**
->
-> این پروژه در حال **توسعه فعال** است. APIها، فرمت‌های کانفیگ، مشخصات پروتکل و رابط‌های خط فرمان ممکن است بدون اطلاع تغییر کنند. انتظار تغییرات شکست‌آمیز بین نسخه‌ها را داشته باشید. در محیط‌های production با احتیاط استفاده کنید.
-
----
-
 # راهنمای نصب و راه‌اندازی Paqet 🚀
 
-سلام! این راهنما بهت کمک می‌کنه که پروژه paqet رو روی دو سرور لینوکسی راه‌اندازی کنی. خیلی راحت و ساده!
+سلام! اینجا می‌خوایم paqet رو روی دو سرور لینوکسی راه‌اندازی کنیم. نگران نباش، خیلی راحته!
 
-## 📋 چیزایی که نیاز داری:
+## چیه این paqet؟
 
-- دو سرور لینوکسی (سرور A و سرور B)
-- دسترسی root یا sudo
-- اینترنت برای دانلود فایل‌ها
-- `libpcap` development libraries (برای نصب: `sudo apt-get install libpcap-dev` در Debian/Ubuntu یا `sudo yum install libpcap-devel` در RHEL/CentOS)
+paqet یک پروکسی دوطرفه در سطح پکت هست که ترافیک رو از یک سرور به سرور دیگه منتقل می‌کنه. با استفاده از raw sockets کار می‌کنه و از KCP برای رمزنگاری استفاده می‌کنه.
 
 ---
 
-## 🎯 روش سریع: استفاده از اسکریپت تعاملی (توصیه می‌شه!)
+## چی نیاز داری؟
 
-اگه می‌خوای همه چیز خودکار باشه و فقط به سوالات جواب بدی، از اسکریپت تعاملی استفاده کن:
+- دو سرور لینوکسی (یکی به عنوان کلاینت، یکی به عنوان سرور)
+- دسترسی root یا sudo
+- اینترنت برای دانلود فایل‌ها
+
+---
+
+## روش ساده: استفاده از اسکریپت تعاملی (توصیه می‌شه!)
+
+اگه می‌خوای همه چیز خودکار باشه و فقط به چند سوال جواب بدی، این روش رو انتخاب کن:
 
 ```bash
 chmod +x setup.sh
 ./setup.sh
 ```
 
-اسکریپت اول ازت می‌پرسه که چه زبانی می‌خوای (فارسی یا انگلیسی) و بعد اسکریپت مربوط به اون زبان رو اجرا می‌کنه.
+اسکریپت اول ازت می‌پرسه که چه زبانی می‌خوای (فارسی یا انگلیسی) و بعد همه چیز رو خودش انجام می‌ده.
 
-> **⚠️ نکته:** اگر حروف فارسی در terminal برعکس نمایش داده می‌شن، این مشکل از terminal شماست نه از اسکریپت. برای راه حل، فایل [TERMINAL_FIX.md](TERMINAL_FIX.md) رو بخون. یا می‌تونی مستقیماً از اسکریپت انگلیسی استفاده کنی: `./setup_en.sh`
+> **نکته:** اگه حروف فارسی در terminal برعکس نمایش داده می‌شن، این مشکل از terminal شماست نه از اسکریپت. برای راه حل، فایل [TERMINAL_FIX.md](TERMINAL_FIX.md) رو بخون. یا می‌تونی مستقیماً از اسکریپت انگلیسی استفاده کنی: `./setup_en.sh`
 
-این اسکریپت:
-- ✅ مرحله به مرحله ازت سوال می‌پرسه
-- ✅ اطلاعات شبکه رو خودش پیدا می‌کنه
-- ✅ فایل کانفیگ رو خودش می‌سازه
-- ✅ قوانین iptables رو خودش اعمال می‌کنه
-- ✅ کلید رمزنگاری رو تولید می‌کنه
-- ✅ دستورات اجرا رو نشونت می‌ده
+### اسکریپت چی کار می‌کنه؟
+
+- مرحله به مرحله ازت سوال می‌پرسه
+- اطلاعات شبکه رو خودش پیدا می‌کنه
+- فایل کانفیگ رو خودش می‌سازه
+- قوانین iptables رو خودش اعمال می‌کنه
+- کلید رمزنگاری رو تولید می‌کنه
+- دستورات اجرا رو نشونت می‌ده
 
 ---
 
-## 🔧 مرحله ۱: نصب Paqet روی هر دو سرور
+## روش دستی: نصب و راه‌اندازی گام به گام
 
-### روی سرور A (کلاینت):
+اگه می‌خوای خودت همه چیز رو انجام بدی، این مراحل رو دنبال کن:
+
+### مرحله ۱: دانلود paqet
+
+روی هر دو سرور (کلاینت و سرور) این دستورات رو اجرا کن:
 
 ```bash
-# دانلود آخرین نسخه paqet
+# دانلود آخرین نسخه
 wget https://github.com/hanselime/paqet/releases/latest/download/paqet-linux-amd64 -O paqet
-
-# یا اگر نسخه خاصی می‌خوای:
-# wget https://github.com/hanselime/paqet/releases/download/v1.0.0/paqet-linux-amd64 -O paqet
 
 # دادن دسترسی اجرا
 chmod +x paqet
@@ -65,58 +59,57 @@ chmod +x paqet
 sudo mv paqet /usr/local/bin/
 ```
 
-### روی سرور B (سرور):
+### مرحله ۲: تنظیم کانفیگ
 
-همون کارها رو انجام بده:
+در این repository دو فایل کانفیگ آماده وجود داره:
 
-```bash
-wget https://github.com/hanselime/paqet/releases/latest/download/paqet-linux-amd64 -O paqet
-chmod +x paqet
-sudo mv paqet /usr/local/bin/
-```
+- `config_client.yaml` - برای سرور کلاینت
+- `config_server.yaml` - برای سرور اصلی
 
----
+#### روی سرور کلاینت:
 
-## ⚙️ مرحله ۲: تنظیم کانفیگ‌ها
-
-در این repository دو فایل کانفیگ آماده وجود داره که می‌تونی استفاده کنی:
-
-- `config_client.yaml` - برای سرور A (کلاینت)
-- `config_server.yaml` - برای سرور B (سرور)
-
-### روی سرور A:
-
-1. فایل `config_client.yaml` رو با ویرایشگر باز کن (مثلا nano یا vim):
-
+1. فایل `config_client.yaml` رو باز کن:
 ```bash
 nano config_client.yaml
 ```
 
 2. این قسمت‌ها رو ویرایش کن:
-   - `network.interface`: نام اینترفیس شبکه‌ات (مثلا `eth0` یا `ens3`)
-   - `network.local_addr`: آی‌پی سرور A با پورت `0` (مثلا `192.168.1.100:0`)
-   - `network.router_mac`: MAC آدرس روترت (میتونی با `ip route | grep default` و سپس `arp -n <gateway_ip>` پیدا کنی)
-   - `server.addr`: آی‌پی سرور B و پورت (مثلا `203.0.113.10:9999`)
+   - `network.interface`: نام اینترفیس شبکه‌ات (مثلا `eth0`)
+   - `network.local_addr`: آی‌پی سرور کلاینت با پورت `0` (مثلا `192.168.1.100:0`)
+   - `network.router_mac`: MAC آدرس روترت
+   - `server.addr`: آی‌پی سرور اصلی و پورت (مثلا `203.0.113.10:9999`)
 
-### روی سرور B:
+#### روی سرور اصلی:
 
 1. فایل `config_server.yaml` رو باز کن:
-
 ```bash
 nano config_server.yaml
 ```
 
 2. این قسمت‌ها رو ویرایش کن:
    - `network.interface`: نام اینترفیس شبکه‌ات
-   - `network.local_addr`: آی‌پی سرور B و پورت (مثلا `10.0.0.100:9999` - باید با `listen.addr` یکسان باشه)
+   - `network.local_addr`: آی‌پی سرور اصلی و پورت (مثلا `10.0.0.100:9999`)
    - `network.router_mac`: MAC آدرس روترت
    - `listen.addr`: پورت گوش دادن (مثلا `:9999`)
 
 **نکته مهم:** کلید رمزنگاری (`transport.kcp.key`) باید در هر دو فایل **دقیقاً یکسان** باشه!
 
----
+### مرحله ۳: پیدا کردن اطلاعات شبکه
 
-## 🔥 مرحله ۳: اعمال قوانین iptables روی سرور B
+اگه نمی‌دونی اینترفیس یا MAC آدرس روترت چیه، این دستورات رو اجرا کن:
+
+```bash
+# پیدا کردن اینترفیس و آی‌پی
+ip a
+
+# پیدا کردن آی‌پی روتر
+ip route | grep default
+
+# پیدا کردن MAC آدرس روتر (بعد از پیدا کردن آی‌پی روتر)
+arp -n <آی‌پی_روتر>
+```
+
+### مرحله ۴: اعمال قوانین iptables روی سرور اصلی
 
 این کار خیلی مهمه! باید جلوی ارسال پکت‌های RST توسط کرنل رو بگیری.
 
@@ -131,42 +124,29 @@ sudo ./iptables_rules.sh
 ```bash
 PORT=9999  # پورت listen سرور
 
-# 1. دور زدن connection tracking
+# دور زدن connection tracking
 sudo iptables -t raw -A PREROUTING -p tcp --dport $PORT -j NOTRACK
 sudo iptables -t raw -A OUTPUT -p tcp --sport $PORT -j NOTRACK
 
-# 2. جلوگیری از ارسال پکت‌های RST
+# جلوگیری از ارسال پکت‌های RST
 sudo iptables -t mangle -A OUTPUT -p tcp --sport $PORT --tcp-flags RST RST -j DROP
 
-# ذخیره کردن (برای Debian/Ubuntu)
+# ذخیره کردن
 sudo iptables-save | sudo tee /etc/iptables/rules.v4
-
-# یا برای RedHat/CentOS
-sudo service iptables save
 ```
 
----
+### مرحله ۵: اجرای paqet
 
-## 🚀 مرحله ۴: اجرای Paqet
-
-### روی سرور B (اول سرور رو اجرا کن):
+**اول سرور اصلی رو اجرا کن:**
 
 ```bash
-# اجرای سرور
 sudo paqet run -c config_server.yaml
-
-# یا اگه در مسیر دیگه‌ای هستی:
-sudo /usr/local/bin/paqet run -c /path/to/config_server.yaml
 ```
 
-### روی سرور A (بعد کلاینت رو اجرا کن):
+**بعد سرور کلاینت رو اجرا کن:**
 
 ```bash
-# اجرای کلاینت
 sudo paqet run -c config_client.yaml
-
-# یا اگه در مسیر دیگه‌ای هستی:
-sudo /usr/local/bin/paqet run -c /path/to/config_client.yaml
 ```
 
 **نکته:** اگه می‌خوای در پس‌زمینه اجرا بشه، از `screen` یا `tmux` استفاده کن:
@@ -174,7 +154,6 @@ sudo /usr/local/bin/paqet run -c /path/to/config_client.yaml
 ```bash
 # نصب screen (اگه نصب نیست)
 sudo apt install screen  # برای Debian/Ubuntu
-# یا
 sudo yum install screen  # برای CentOS/RHEL
 
 # اجرا در screen
@@ -185,40 +164,26 @@ sudo paqet run -c config_server.yaml
 # برای برگشت: screen -r paqet
 ```
 
----
+### مرحله ۶: تست کردن
 
-## 🧪 مرحله ۵: تست کردن اتصال
-
-### تست ۱: بررسی اینکه SOCKS5 Proxy کار می‌کنه
-
-روی سرور A یا هر کامپیوتری که به سرور A دسترسی داره:
+روی سرور کلاینت یا هر کامپیوتری که به سرور کلاینت دسترسی داره:
 
 ```bash
 # تست با curl
 curl -x socks5://127.0.0.1:1080 http://httpbin.org/ip
-
-# یا تست با یک سایت دیگه
-curl -x socks5://127.0.0.1:1080 https://www.google.com
 ```
 
 اگه جواب گرفت، یعنی همه چیز درسته! 🎉
 
-### تست ۲: استفاده از دستور ping
-
-```bash
-# روی کلاینت (سرور A)
-sudo paqet ping -c config_client.yaml
-```
-
 ---
 
-## 🔍 عیب‌یابی (Troubleshooting)
+## عیب‌یابی
 
-### مشکل: اتصال برقرار نمیشه
+### اتصال برقرار نمیشه؟
 
 1. **چک کن که فایروال پورت 9999 رو باز کرده باشه:**
 ```bash
-# روی سرور B
+# روی سرور اصلی
 sudo ufw allow 9999/tcp  # برای ufw
 # یا
 sudo firewall-cmd --add-port=9999/tcp --permanent  # برای firewalld
@@ -227,9 +192,8 @@ sudo firewall-cmd --reload
 
 2. **چک کن که آی‌پی و پورت درست باشه:**
 ```bash
-# روی سرور A
-ping YOUR_SERVER_B_IP
-telnet YOUR_SERVER_B_IP 9999
+ping <آی‌پی_سرور_اصلی>
+telnet <آی‌پی_سرور_اصلی> 9999
 ```
 
 3. **چک کن که کلید رمزنگاری یکسان باشه** در هر دو فایل کانفیگ
@@ -240,13 +204,9 @@ sudo iptables -t raw -L -n -v
 sudo iptables -t mangle -L -n -v
 ```
 
-### مشکل: پکت‌های RST ارسال می‌شن
+### SOCKS5 Proxy پاسخ نمی‌ده؟
 
-مطمئن شو که دستورات iptables رو درست اجرا کردی (مرحله ۳ رو دوباره چک کن).
-
-### مشکل: SOCKS5 Proxy پاسخ نمی‌ده
-
-1. چک کن که paqet روی سرور A در حال اجرا باشه
+1. چک کن که paqet روی سرور کلاینت در حال اجرا باشه
 2. چک کن که پورت 1080 باز باشه:
 ```bash
 sudo netstat -tlnp | grep 1080
@@ -256,21 +216,21 @@ sudo ss -tlnp | grep 1080
 
 ---
 
-## 📝 نکات مهم
+## نکات مهم
 
-- **همیشه اول سرور B رو اجرا کن، بعد سرور A**
-- **کلید رمزنگاری (`transport.kcp.key`) باید در هر دو فایل یکسان باشه**
+- **همیشه اول سرور اصلی رو اجرا کن، بعد سرور کلاینت**
+- **کلید رمزنگاری باید در هر دو فایل یکسان باشه**
 - **MAC آدرس روتر رو درست وارد کن** (اگه اشتباه باشه، کار نمی‌کنه)
 - **برای سرور، پورت `network.local_addr` و `listen.addr` باید یکسان باشه**
-- **برای کلاینت، از پورت `0` در `network.local_addr` استفاده کن** تا خودکار انتخاب بشه
+- **برای کلاینت، از پورت `0` در `network.local_addr` استفاده کن**
 
 ---
 
-## 🔄 اجرای دائمی با systemd (اختیاری)
+## اجرای دائمی با systemd
 
 اگه می‌خوای paqet همیشه اجرا باشه و با راه‌اندازی مجدد سرور، خودکار شروع بشه:
 
-### روی سرور A:
+### روی سرور کلاینت:
 
 ```bash
 sudo nano /etc/systemd/system/paqet-client.service
@@ -302,13 +262,13 @@ sudo systemctl enable paqet-client
 sudo systemctl start paqet-client
 ```
 
-### روی سرور B:
+### روی سرور اصلی:
 
 همون کار رو انجام بده، فقط اسم سرویس رو `paqet-server` بذار و مسیر کانفیگ رو تغییر بده.
 
 ---
 
-## 🎯 خلاصه دستورات سریع
+## خلاصه دستورات سریع
 
 ```bash
 # نصب
@@ -317,15 +277,15 @@ chmod +x paqet
 sudo mv paqet /usr/local/bin/
 
 # ویرایش کانفیگ
-nano config_client.yaml  # روی سرور A
-nano config_server.yaml  # روی سرور B
+nano config_client.yaml  # روی سرور کلاینت
+nano config_server.yaml  # روی سرور اصلی
 
-# اعمال iptables (روی سرور B)
+# اعمال iptables (روی سرور اصلی)
 sudo ./iptables_rules.sh
 
 # اجرا
-sudo paqet run -c config_server.yaml  # روی سرور B
-sudo paqet run -c config_client.yaml  # روی سرور A
+sudo paqet run -c config_server.yaml  # روی سرور اصلی
+sudo paqet run -c config_client.yaml  # روی سرور کلاینت
 
 # تست
 curl -x socks5://127.0.0.1:1080 http://httpbin.org/ip
@@ -333,21 +293,21 @@ curl -x socks5://127.0.0.1:1080 http://httpbin.org/ip
 
 ---
 
-## 📚 دستورات Paqet
+## دستورات Paqet
 
 `paqet` یک برنامه چند دستوری است. دستور اصلی `run` است که پروکسی رو شروع می‌کنه:
 
 | دستور | توضیحات |
 | :-------- | :------------------------------------------------------------------------------- |
-| `run`     | شروع پروکسی کلاینت یا سرور paqet. این دستور اصلی عملیاتی است. |
-| `secret`  | تولید یک کلید رمزنگاری امن جدید. |
-| `ping`    | ارسال یک پکت تست به سرور برای بررسی اتصال. |
-| `dump`    | ابزار تشخیصی مشابه `tcpdump` که پکت‌ها رو capture و decode می‌کنه. |
-| `version` | نمایش اطلاعات نسخه برنامه. |
+| `run`     | شروع پروکسی کلاینت یا سرور paqet |
+| `secret`  | تولید یک کلید رمزنگاری امن جدید |
+| `ping`    | ارسال یک پکت تست به سرور برای بررسی اتصال |
+| `dump`    | ابزار تشخیصی مشابه `tcpdump` |
+| `version` | نمایش اطلاعات نسخه برنامه |
 
 ---
 
-## ⚠️ هشدار امنیتی
+## هشدار امنیتی
 
 این پروژه یک اکتشاف از شبکه‌سازی سطح پایین است و مسئولیت‌های امنیتی قابل توجهی دارد. پروتکل انتقال KCP رمزنگاری، احراز هویت و یکپارچگی را با استفاده از رمزنگاری متقارن با کلید مشترک فراهم می‌کند.
 
@@ -355,11 +315,12 @@ curl -x socks5://127.0.0.1:1080 http://httpbin.org/ip
 
 ---
 
-## 📄 فایل‌های موجود در این Repository
+## فایل‌های موجود
 
-- `config_client.yaml` - کانفیگ آماده برای کلاینت (سرور A)
-- `config_server.yaml` - کانفیگ آماده برای سرور (سرور B)
+- `config_client.yaml` - کانفیگ آماده برای کلاینت
+- `config_server.yaml` - کانفیگ آماده برای سرور
 - `iptables_rules.sh` - اسکریپت اعمال قوانین iptables
+- `setup.sh` - اسکریپت تعاملی راه‌اندازی
 - `QUICK_START.md` - راهنمای سریع
 
 ---
@@ -375,327 +336,310 @@ curl -x socks5://127.0.0.1:1080 http://httpbin.org/ip
 >
 > This project is in **active development**. APIs, configuration formats, protocol specifications, and command-line interfaces may change without notice. Expect breaking changes between versions. Use with caution in production environments.
 
-This project serves as an example of low-level network programming in Go, demonstrating concepts like:
+## Quick Start: Interactive Setup Script (Recommended!)
 
-- Raw packet crafting and injection with `gopacket`.
-- Packet capture with `pcap`.
-- Custom binary network protocols.
-- The security implications of operating below the standard OS firewall.
-
-## Use Cases and Motivation
-
-`paqet` is designed for specific scenarios where standard VPN or SSH tunnels may be insufficient. Its primary use cases include bypassing firewalls that detect standard handshake protocols by using custom packet structures, network security research for penetration testing and data exfiltration, and evading kernel-level connection tracking for monitoring avoidance.
-
-While `paqet` includes built-in encryption via KCP, it is more complex to configure than general-purpose VPN solutions.
-
-## How It Works
-
-`paqet` creates a transport channel using KCP over raw TCP packets, bypassing the OS's TCP/IP stack entirely. It captures packets using pcap and injects crafted TCP packets containing encrypted transport data, allowing it to bypass kernel-level connection tracking and evade firewalls.
-
-```
-[Your App] <------> [paqet Client] <===== Raw TCP Packet =====> [paqet Server] <------> [Target Server]
-(e.g. curl)        (localhost:1080)        (Internet)          (Public IP:PORT)     (e.g. https://httpbin.org)
-```
-
-The system operates in three layers: raw TCP packet injection, encrypted transport (KCP), and application-level connection multiplexing.
-
-KCP provides reliable, encrypted communication with aggressive retransmission and forward error correction optimized for high-loss networks. It uses symmetric encryption with a shared secret key and offers multiple congestion control modes with SMUX multiplexing.
-
-KCP is optimized for real-time applications, gaming, or unpredictable network conditions where low latency and simple setup are preferred.
-
-## Getting Started
-
-### Prerequisites
-
-- `libpcap` development libraries must be installed on both the client and server machines.
-  - **Debian/Ubuntu:** `sudo apt-get install libpcap-dev`
-  - **RHEL/CentOS/Fedora:** `sudo yum install libpcap-devel`
-  - **macOS:** Comes pre-installed with Xcode Command Line Tools. Install with `xcode-select --install`
-  - **Windows:** Install Npcap. Download from [npcap.com](https://npcap.com/).
-
-### 1. Download a Release
-
-Download the pre-compiled binary for your client and server operating systems from the project's **Releases page**.
-
-You will also need the configuration files from the `example/` directory or use the ready-made configs in this repository:
-- `config_client.yaml` - Client configuration
-- `config_server.yaml` - Server configuration
-
-### 2. Configure the Connection
-
-paqet uses a unified configuration approach with role-based settings. You can use the ready-made config files in this repository or copy and modify from:
-- `example/client.yaml.example` - Client configuration example
-- `example/server.yaml.example` - Server configuration example
-
-You must correctly set the interfaces, IP addresses, MAC addresses, and ports.
-
-> **⚠️ Important:**
->
-> - **Role Configuration**: Role must be explicitly set as `role: "client"` or `role: "server"`
-> - **Transport Security**: KCP requires identical keys on client/server.
-> - **Configuration**: See "Critical Configuration Points" section below for detailed security requirements
-
-#### Finding Your Network Details
-
-You'll need to find your network interface name, local IP, and the MAC address of your network's gateway (router).
-
-**On Linux:**
-
-1.  **Find Interface and Local IP:** Run `ip a`. Look for your primary network card (e.g., `eth0`, `ens3`). Its IP address is listed under `inet`.
-2.  **Find Gateway MAC:**
-    - First, find your gateway's IP: `ip r | grep default`
-    - Then, find its MAC address with `arp -n <gateway_ip>` (e.g., `arp -n 192.168.1.1`).
-
-**On macOS:**
-
-1.  **Find Interface and Local IP:** Run `ifconfig`. Look for your primary interface (e.g., `en0`). Its IP is listed under `inet`.
-2.  **Find Gateway MAC:**
-    - First, find your gateway's IP: `netstat -rn | grep default`
-    - Then, find its MAC address with `arp <gateway_ip>` (e.g., `arp 192.168.1.1`).
-
-**On Windows:**
-
-1.  **Find Interface and Local IP:** Open Command Prompt or PowerShell and run `ipconfig /all`. Look for your active network adapter (e.g., "Ethernet adapter Ethernet", "Wi-Fi adapter Wi-Fi"). Note the "IPv4 Address".
-2.  **Find Interface Name:** Run `netsh interface show interface` to list interface names. Use the "Interface Name" column value (e.g., "Ethernet", "Wi-Fi").
-3.  **Find Gateway MAC:**
-    - First, find your gateway's IP: `ipconfig /all` (look for "Default Gateway")
-    - Then, find its MAC address with `arp -a <gateway_ip>` (e.g., `arp -a 192.168.1.1`)
-
-#### Client Configuration - SOCKS5 Proxy Mode
-
-The client acts as a SOCKS5 proxy server, accepting connections from applications and dynamically forwarding them through the raw TCP packets to any destination.
-
-#### Example Client Configuration (`config.yaml`)
-
-```yaml
-# Role must be explicitly set
-role: "client"
-
-# Logging configuration
-log:
-  level: "info" # none, debug, info, warn, error, fatal
-
-# SOCKS5 proxy configuration (client mode)
-socks5:
-  - listen: "127.0.0.1:1080" # SOCKS5 proxy listen address
-
-# Network interface settings
-network:
-  interface: "en0" # CHANGE ME: Network interface (en0, eth0, wlan0, etc.)
-  local_addr: "192.168.1.100:0" # CHANGE ME: Local IP (use port 0 for random port)
-  router_mac: "aa:bb:cc:dd:ee:ff" # CHANGE ME: Gateway/router MAC address
-
-# Server connection settings
-server:
-  addr: "SERVER_IP:9999" # CHANGE ME: paqet server address and port
-
-# Transport protocol configuration
-transport:
-  protocol: "kcp" # Transport protocol (currently only "kcp" supported)
-  kcp:
-    block: "aes" # Encryption algorithm
-    key: "your-secret-key-here" # CHANGE ME: Secret key (must match server)
-```
-
-#### Example Server Configuration (`config.yaml`)
-
-```yaml
-# Role must be explicitly set
-role: "server"
-
-# Logging configuration
-log:
-  level: "info" # none, debug, info, warn, error, fatal
-
-# Server listen configuration
-listen:
-  addr: ":9999" # CHANGE ME: Server listen port (must match network.local_addr port)
-
-# Network interface settings
-network:
-  interface: "eth0" # CHANGE ME: Network interface (eth0, ens3, en0, etc.)
-  local_addr: "10.0.0.100:9999" # CHANGE ME: Server IP and port (port must match listen.addr)
-  router_mac: "aa:bb:cc:dd:ee:ff" # CHANGE ME: Gateway/router MAC address
-
-# Transport protocol configuration
-transport:
-  protocol: "kcp" # Transport protocol (currently only "kcp" supported)
-  kcp:
-    block: "aes" # Encryption algorithm
-    key: "your-secret-key-here" # CHANGE ME: Secret key (must match client)
-```
-
-#### Critical Firewall Configuration
-
-This application uses `pcap` to receive and inject packets at a low level, **bypassing traditional firewalls like `ufw` or `firewalld`**. However, the OS kernel will still see incoming packets for the connection port and, not knowing about the connection, will generate TCP `RST` (reset) packets. While your connection may appear to work initially, these kernel-generated RST packets can corrupt connection state in NAT devices and stateful firewalls, leading to connection instability, packet drops, and premature connection termination in complex network environments.
-
-You **must** configure `iptables` on the server to prevent the kernel from interfering.
-
-Run these commands as root on your server:
+If you want everything automated and just answer a few questions, use the interactive setup script:
 
 ```bash
-# Replace <PORT> with your server listen port (e.g., 9999)
-
-# 1. Bypass connection tracking (conntrack) for the connection port. This is essential.
-# This tells the kernel's netfilter to ignore packets on this port for state tracking.
-sudo iptables -t raw -A PREROUTING -p tcp --dport <PORT> -j NOTRACK
-sudo iptables -t raw -A OUTPUT -p tcp --sport <PORT> -j NOTRACK
-
-# 2. Prevent the kernel from sending TCP RST packets that would kill the session.
-# This drops any RST packets the kernel tries to send from the connection port.
-sudo iptables -t mangle -A OUTPUT -p tcp --sport <PORT> --tcp-flags RST RST -j DROP
-
-# An alternative for rule 2 if issues persist:
-sudo iptables -t filter -A INPUT -p tcp --dport <PORT> -j ACCEPT
-sudo iptables -t filter -A OUTPUT -p tcp --sport <PORT> -j ACCEPT
-
-# To make rules persistent across reboots:
-# Debian/Ubuntu: sudo iptables-save > /etc/iptables/rules.v4
-# RHEL/CentOS: sudo service iptables save
+chmod +x setup.sh
+./setup.sh
 ```
 
-These rules ensure that only the application handles traffic for the connection port.
+The script will first ask you which language you prefer (Persian or English) and then handle everything automatically.
 
-### 3. Run `paqet`
+### What does the script do?
 
-Make the downloaded binary executable (`chmod +x ./paqet_linux_amd64`). You will need root privileges to use raw sockets.
+- Asks you questions step by step
+- Automatically finds network information
+- Creates configuration files
+- Applies iptables rules
+- Generates encryption keys
+- Shows you the run commands
 
-**On the Server:**
-_Place your server configuration file in the same directory as the binary and run:_
+---
+
+## Manual Installation: Step by Step
+
+If you want to do everything manually, follow these steps:
+
+### Step 1: Download paqet
+
+On both servers (client and server), run these commands:
 
 ```bash
-# Make sure to use the binary name you downloaded for your server's OS/Arch.
-sudo ./paqet_linux_amd64 run -c config.yaml
+# Download latest version
+wget https://github.com/hanselime/paqet/releases/latest/download/paqet-linux-amd64 -O paqet
+
+# Make executable
+chmod +x paqet
+
+# Move to appropriate location (optional)
+sudo mv paqet /usr/local/bin/
 ```
 
-**On the Client:**
-_Place your client configuration file in the same directory as the binary and run:_
+### Step 2: Configure
+
+This repository contains two ready-made configuration files:
+
+- `config_client.yaml` - For the client server
+- `config_server.yaml` - For the main server
+
+#### On the client server:
+
+1. Open `config_client.yaml`:
+```bash
+nano config_client.yaml
+```
+
+2. Edit these parts:
+   - `network.interface`: Your network interface name (e.g., `eth0`)
+   - `network.local_addr`: Client server IP with port `0` (e.g., `192.168.1.100:0`)
+   - `network.router_mac`: Your router's MAC address
+   - `server.addr`: Main server IP and port (e.g., `203.0.113.10:9999`)
+
+#### On the main server:
+
+1. Open `config_server.yaml`:
+```bash
+nano config_server.yaml
+```
+
+2. Edit these parts:
+   - `network.interface`: Your network interface name
+   - `network.local_addr`: Main server IP and port (e.g., `10.0.0.100:9999`)
+   - `network.router_mac`: Your router's MAC address
+   - `listen.addr`: Listen port (e.g., `:9999`)
+
+**Important:** The encryption key (`transport.kcp.key`) must be **exactly the same** in both files!
+
+### Step 3: Find Network Information
+
+If you don't know your interface or router MAC address, run these commands:
 
 ```bash
-# Make sure to use the binary name you downloaded for your client's OS/Arch.
-sudo ./paqet_darwin_arm64 run -c config.yaml
+# Find interface and IP
+ip a
+
+# Find router IP
+ip route | grep default
+
+# Find router MAC address (after finding router IP)
+arp -n <router_ip>
 ```
 
-### 4. Test the Connection
+### Step 4: Apply iptables Rules on Main Server
 
-Once the client and server are running, test the SOCKS5 proxy:
+This is very important! You need to prevent the kernel from sending RST packets.
 
 ```bash
-# Test with curl using the SOCKS5 proxy
-curl -v https://httpbin.org/ip --proxy socks5h://127.0.0.1:1080
+# Run the ready-made script
+chmod +x iptables_rules.sh
+sudo ./iptables_rules.sh
 ```
 
-This request will be proxied over raw TCP packets to the server, and then forwarded according to the client mode configuration. The output should show your server's public IP address, confirming the connection is working.
-
-## Command-Line Usage
-
-`paqet` is a multi-command application. The primary command is `run`, which starts the proxy, but several utility commands are included to help with configuration and debugging.
-
-The general syntax is:
+Or if you want to do it manually:
 
 ```bash
-sudo ./paqet <command> [arguments]
+PORT=9999  # Server listen port
+
+# Bypass connection tracking
+sudo iptables -t raw -A PREROUTING -p tcp --dport $PORT -j NOTRACK
+sudo iptables -t raw -A OUTPUT -p tcp --sport $PORT -j NOTRACK
+
+# Prevent RST packet sending
+sudo iptables -t mangle -A OUTPUT -p tcp --sport $PORT --tcp-flags RST RST -j DROP
+
+# Save
+sudo iptables-save | sudo tee /etc/iptables/rules.v4
 ```
+
+### Step 5: Run paqet
+
+**First run the main server:**
+
+```bash
+sudo paqet run -c config_server.yaml
+```
+
+**Then run the client server:**
+
+```bash
+sudo paqet run -c config_client.yaml
+```
+
+**Note:** If you want to run it in the background, use `screen` or `tmux`:
+
+```bash
+# Install screen (if not installed)
+sudo apt install screen  # For Debian/Ubuntu
+sudo yum install screen  # For CentOS/RHEL
+
+# Run in screen
+screen -S paqet
+sudo paqet run -c config_server.yaml
+
+# To detach: Ctrl+A then D
+# To return: screen -r paqet
+```
+
+### Step 6: Test
+
+On the client server or any computer that has access to the client server:
+
+```bash
+# Test with curl
+curl -x socks5://127.0.0.1:1080 http://httpbin.org/ip
+```
+
+If you get a response, everything is working! 🎉
+
+---
+
+## Troubleshooting
+
+### Connection not established?
+
+1. **Check that firewall has port 9999 open:**
+```bash
+# On main server
+sudo ufw allow 9999/tcp  # For ufw
+# Or
+sudo firewall-cmd --add-port=9999/tcp --permanent  # For firewalld
+sudo firewall-cmd --reload
+```
+
+2. **Check that IP and port are correct:**
+```bash
+ping <main_server_ip>
+telnet <main_server_ip> 9999
+```
+
+3. **Check that encryption key is the same** in both config files
+
+4. **Check that iptables rules are applied:**
+```bash
+sudo iptables -t raw -L -n -v
+sudo iptables -t mangle -L -n -v
+```
+
+### SOCKS5 Proxy not responding?
+
+1. Check that paqet is running on the client server
+2. Check that port 1080 is open:
+```bash
+sudo netstat -tlnp | grep 1080
+# Or
+sudo ss -tlnp | grep 1080
+```
+
+---
+
+## Important Notes
+
+- **Always run the main server first, then the client server**
+- **Encryption key must be the same in both files**
+- **Enter router MAC address correctly** (if wrong, it won't work)
+- **For server, `network.local_addr` and `listen.addr` ports must match**
+- **For client, use port `0` in `network.local_addr`**
+
+---
+
+## Running as a Service with systemd
+
+If you want paqet to always run and start automatically on server reboot:
+
+### On client server:
+
+```bash
+sudo nano /etc/systemd/system/paqet-client.service
+```
+
+Put the following content:
+
+```ini
+[Unit]
+Description=Paqet Client
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/paqet run -c /path/to/config_client.yaml
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable paqet-client
+sudo systemctl start paqet-client
+```
+
+### On main server:
+
+Do the same, just name the service `paqet-server` and change the config path.
+
+---
+
+## Quick Command Summary
+
+```bash
+# Install
+wget https://github.com/hanselime/paqet/releases/latest/download/paqet-linux-amd64 -O paqet
+chmod +x paqet
+sudo mv paqet /usr/local/bin/
+
+# Edit config
+nano config_client.yaml  # On client server
+nano config_server.yaml  # On main server
+
+# Apply iptables (on main server)
+sudo ./iptables_rules.sh
+
+# Run
+sudo paqet run -c config_server.yaml  # On main server
+sudo paqet run -c config_client.yaml  # On client server
+
+# Test
+curl -x socks5://127.0.0.1:1080 http://httpbin.org/ip
+```
+
+---
+
+## Paqet Commands
+
+`paqet` is a multi-command application. The main command is `run` which starts the proxy:
 
 | Command   | Description                                                                      |
 | :-------- | :------------------------------------------------------------------------------- |
-| `run`     | Starts the `paqet` client or server proxy. This is the main operational command. |
-| `secret`  | Generates a new, cryptographically secure secret key.                            |
-| `ping`    | Sends a single test packet to the server to verify connectivity .                |
-| `dump`    | A diagnostic tool similar to `tcpdump` that captures and decodes packets.        |
-| `version` | Prints the application's version information.                                    |
+| `run`     | Starts the `paqet` client or server proxy |
+| `secret`  | Generates a new, cryptographically secure secret key |
+| `ping`    | Sends a single test packet to the server to verify connectivity |
+| `dump`    | A diagnostic tool similar to `tcpdump` |
+| `version` | Prints the application's version information |
 
-## Configuration Reference
+---
 
-paqet uses a unified YAML configuration that works for both clients and servers. The `role` field must be explicitly set to either `"client"` or `"server"`.
-
-**📁 For complete parameter documentation, see the example files:**
-
-- [`example/client.yaml.example`](example/client.yaml.example) - Client configuration reference
-- [`example/server.yaml.example`](example/server.yaml.example) - Server configuration reference
-
-### Critical Configuration Points
-
-**Transport Security:** KCP requires identical keys on client/server (use `secret` command to generate).
-
-**Network Configuration:** Use your actual IP address in `network.local_addr`, not `127.0.0.1`. For servers, `network.local_addr` and `listen.addr` ports must match. For clients, use port `0` in `network.local_addr` to automatically assign a random available port and avoid conflicts.
-
-**TCP Flag Cycling:** The `network.tcp.local_flag` and `network.tcp.remote_flag` arrays cycle through flag combinations to vary traffic patterns. Common patterns: `["PA"]` (standard data), `["S"]` (connection setup), `["A"]` (acknowledgment).
-
-# Architecture & Security Model
-
-### The `pcap` Approach and Firewall Bypass
-
-Understanding _why_ standard firewalls are bypassed is key to using this tool securely.
-
-A normal application uses the OS's TCP/IP stack. When a packet arrives, it travels up the stack where `netfilter` (the backend for `ufw`/`firewalld`) inspects it. If a firewall rule blocks the port, the packet is dropped and never reaches the application.
-
-```
-      +------------------------+
-      |   Normal Application   |  <-- Data is received here
-      +------------------------+
-                   ^
-      +------------------------+
-      |    OS TCP/IP Stack     |  <-- Firewall (netfilter) runs here
-      |  (Connection Tracking) |
-      +------------------------+
-                   ^
-      +------------------------+
-      |     Network Driver     |
-      +------------------------+
-```
-
-`paqet` uses `pcap` to hook in at a much lower level. It requests a **copy** of every packet directly from the network driver, _before_ the main OS TCP/IP stack and firewall get to process it.
-
-```
-      +------------------------+
-      |    paqet Application   |  <-- Gets a packet copy immediately
-      +------------------------+
-              ^       \
- (pcap copy) /         \  (Original packet continues up)
-            /           v
-      +------------------------+
-      |     OS TCP/IP Stack    |  <-- Firewall drops the *original* packet,
-      |  (Connection Tracking) |      but paqet already has its copy.
-      +------------------------+
-                  ^
-      +------------------------+
-      |     Network Driver     |
-      +------------------------+
-```
-
-This means a rule like `ufw deny <PORT>` will have no effect on the proxy's operation, as `paqet` receives and processes the packet before `ufw` can block it.
-
-## ⚠️ Security Warning
+## Security Warning
 
 This project is an exploration of low-level networking and carries significant security responsibilities. The KCP transport protocol provides encryption, authentication, and integrity using symmetric encryption with a shared secret key.
 
 Security depends entirely on proper key management. Use the `secret` command to generate a strong key that must remain identical on both client and server.
 
-## Troubleshooting
+---
 
-1.  **Permission Denied:** Ensure you are running with `sudo`.
-2.  **Connection Times Out:**
-    - **Transport Configuration Mismatch:**
-      - **KCP**: Ensure `transport.kcp.key` is exactly identical on client and server
-    - **`iptables` Rules:** Did you apply the firewall rules on the server?
-    - **Incorrect Network Details:** Double-check all IPs, MAC addresses, and interface names.
-    - **Cloud Provider Firewalls:** Ensure your cloud provider's security group allows TCP traffic on your `listen.addr` port.
-    - **NAT/Port Configuration:** For servers, ensure `listen.addr` and `network.local_addr` ports match. For clients, use port `0` in `network.local_addr` for automatic port assignment to avoid conflicts.
-3.  **Use `ping` and `dump`:** Use `paqet ping -c config.yaml` to test the connection. Use `paqet dump -p <PORT>` on the server to see if packets are arriving.
+## Files in This Repository
 
-## Acknowledgments
-
-This work draws inspiration from the research and implementation in the [gfw_resist_tcp_proxy](https://github.com/GFW-knocker/gfw_resist_tcp_proxy) project by GFW-knocker, which explored the use of raw sockets to circumvent certain forms of network filtering. This project serves as a Go-based exploration of those concepts.
-
-- Uses [pcap](https://github.com/gopacket/gopacket/pcap) for low-level packet capture and injection
-- Uses [gopacket](https://github.com/gopacket/gopacket) for raw packet crafting and decoding
-- Uses [kcp-go](https://github.com/xtaci/kcp-go) for reliable transport with encryption
-- Uses [smux](https://github.com/xtaci/smux) for connection multiplexing
-
-## License
-
-This project is licensed under the MIT License. See the see [LICENSE](LICENSE) file for details.
+- `config_client.yaml` - Ready-made config for client
+- `config_server.yaml` - Ready-made config for server
+- `iptables_rules.sh` - Script to apply iptables rules
+- `setup.sh` - Interactive setup script
+- `QUICK_START.md` - Quick start guide
 
 </details>
 
