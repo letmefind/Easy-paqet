@@ -1008,3 +1008,4 @@ EOF
         sudo systemctl status ${SERVICE_NAME} --no-pager -l
     fi
 fi
+fi
