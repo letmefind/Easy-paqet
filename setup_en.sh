@@ -374,7 +374,6 @@ if [ -f "$SCRIPT_DIR/config_client.yaml" ]; then
     cp "$SCRIPT_DIR/config_client.yaml" "$PACKAGE_DIR/" 2>/dev/null || true
     echo "✓ config_client.yaml copied"
 fi
-TEMP_EOF
 
 # Copy paqet
 if [ -f "$PAQET_BINARY" ]; then
@@ -423,16 +422,25 @@ sudo ./paqet run -c config_client.yaml
 README_EOF
 
 # Create tar (without gzip)
-tar -cf "$ARCHIVE_NAME" "$PACKAGE_DIR"
-
-echo ""
-echo "✅ Package created: $ARCHIVE_NAME"
-echo "   Size: $(du -h "$ARCHIVE_NAME" | cut -f1)"
-echo ""
-echo "🚀 To use:"
-echo "   1. Transfer file to client server"
-echo "   2. Extract: tar -xf $ARCHIVE_NAME"
-echo "   3. Setup: cd $PACKAGE_DIR && ./setup.sh"
+if [ -d "$PACKAGE_DIR" ]; then
+    tar -cf "$ARCHIVE_NAME" "$PACKAGE_DIR" 2>/dev/null
+    if [ $? -eq 0 ] && [ -f "$ARCHIVE_NAME" ]; then
+        echo ""
+        echo "✅ Package created: $ARCHIVE_NAME"
+        echo "   Size: $(du -h "$ARCHIVE_NAME" | cut -f1)"
+        echo ""
+        echo "🚀 To use:"
+        echo "   1. Transfer file to client server"
+        echo "   2. Extract: tar -xf $ARCHIVE_NAME"
+        echo "   3. Setup: cd $PACKAGE_DIR && ./setup.sh"
+    else
+        echo "❌ Failed to create archive"
+        exit 1
+    fi
+else
+    echo "❌ Package directory not found: $PACKAGE_DIR"
+    exit 1
+fi
 TEMP_EOF
 
         chmod +x /tmp/create_client_package_temp.sh

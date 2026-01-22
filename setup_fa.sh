@@ -374,7 +374,6 @@ if [ -f "$SCRIPT_DIR/config_client.yaml" ]; then
     cp "$SCRIPT_DIR/config_client.yaml" "$PACKAGE_DIR/" 2>/dev/null || true
     echo "✓ config_client.yaml کپی شد"
 fi
-TEMP_EOF
 
 # کپی paqet
 if [ -f "$PAQET_BINARY" ]; then
@@ -423,16 +422,25 @@ sudo ./paqet run -c config_client.yaml
 README_EOF
 
 # ساخت tar (بدون gzip)
-tar -cf "$ARCHIVE_NAME" "$PACKAGE_DIR"
-
-echo ""
-echo "✅ بسته ساخته شد: $ARCHIVE_NAME"
-echo "   حجم: $(du -h "$ARCHIVE_NAME" | cut -f1)"
-echo ""
-echo "🚀 برای استفاده:"
-echo "   1. فایل رو به سرور کلاینت منتقل کن"
-echo "   2. استخراج کن: tar -xf $ARCHIVE_NAME"
-echo "   3. راه‌اندازی کن: cd $PACKAGE_DIR && ./setup.sh"
+if [ -d "$PACKAGE_DIR" ]; then
+    tar -cf "$ARCHIVE_NAME" "$PACKAGE_DIR" 2>/dev/null
+    if [ $? -eq 0 ] && [ -f "$ARCHIVE_NAME" ]; then
+        echo ""
+        echo "✅ بسته ساخته شد: $ARCHIVE_NAME"
+        echo "   حجم: $(du -h "$ARCHIVE_NAME" | cut -f1)"
+        echo ""
+        echo "🚀 برای استفاده:"
+        echo "   1. فایل رو به سرور کلاینت منتقل کن"
+        echo "   2. استخراج کن: tar -xf $ARCHIVE_NAME"
+        echo "   3. راه‌اندازی کن: cd $PACKAGE_DIR && ./setup.sh"
+    else
+        echo "❌ ساخت بسته ناموفق بود"
+        exit 1
+    fi
+else
+    echo "❌ دایرکتوری بسته پیدا نشد: $PACKAGE_DIR"
+    exit 1
+fi
 TEMP_EOF
 
         chmod +x /tmp/create_client_package_temp.sh
