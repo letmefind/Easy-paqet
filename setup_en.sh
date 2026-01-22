@@ -755,9 +755,23 @@ if [[ "$CREATE_SERVICE" != "n" && "$CREATE_SERVICE" != "N" ]]; then
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
     
-    # Find paqet path
-    PAQET_PATH=$(readlink -f "$PAQET_CMD" 2>/dev/null || realpath "$PAQET_CMD" 2>/dev/null || echo "$(pwd)/$PAQET_CMD")
-    CONFIG_PATH=$(readlink -f "$CONFIG_FILE" 2>/dev/null || realpath "$CONFIG_FILE" 2>/dev/null || echo "$(pwd)/$CONFIG_FILE")
+    # Find paqet path - handle relative paths correctly
+    if [[ "$PAQET_CMD" == ./* ]]; then
+        # Relative path like ./paqet
+        PAQET_PATH="$(cd "$(dirname "$PAQET_CMD")" && pwd)/$(basename "$PAQET_CMD")"
+    elif [[ "$PAQET_CMD" == /* ]]; then
+        # Absolute path
+        PAQET_PATH="$PAQET_CMD"
+    else
+        # Command in PATH
+        PAQET_PATH=$(command -v "$PAQET_CMD" 2>/dev/null || echo "$(pwd)/$PAQET_CMD")
+    fi
+    
+    if [[ "$CONFIG_FILE" == ./* ]] || [[ "$CONFIG_FILE" == /* ]]; then
+        CONFIG_PATH=$(readlink -f "$CONFIG_FILE" 2>/dev/null || realpath "$CONFIG_FILE" 2>/dev/null || echo "$(pwd)/$CONFIG_FILE")
+    else
+        CONFIG_PATH="$(pwd)/$CONFIG_FILE"
+    fi
     
     # Service name
     SERVICE_NAME="paqet-${ROLE}"
