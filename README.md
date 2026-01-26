@@ -21,6 +21,8 @@ paqet یک پروکسی دوطرفه در سطح پکت هست که ترافیک
 اگه می‌خوای همه چیز خودکار باشه و فقط به چند سوال جواب بدی، این روش رو انتخاب کن:
 
 ```bash
+git clone https://github.com/letmefind/Easy-paqet.git
+cd Easy-paqet
 chmod +x setup.sh
 ./setup.sh
 ```
