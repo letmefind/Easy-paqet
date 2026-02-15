@@ -1330,7 +1330,7 @@ transport:
   conn: $KCP_CONN
   kcp:
     mode: "$KCP_MODE"
-    mtu: 1480
+    mtu: 1350
     rcvwnd: $KCP_RCVWND
     sndwnd: $KCP_SNDWND
     block: "salsa20"
@@ -1714,7 +1714,7 @@ transport:
   conn: $KCP_CONN
   kcp:
     mode: "$KCP_MODE"
-    mtu: 1480
+    mtu: 1350
     rcvwnd: $KCP_RCVWND
     sndwnd: $KCP_SNDWND
     block: "salsa20"
@@ -2125,7 +2125,7 @@ transport:
   conn: $KCP_CONN
   kcp:
     mode: "$KCP_MODE"
-    mtu: 1480
+    mtu: 1350
     rcvwnd: $KCP_RCVWND
     sndwnd: $KCP_SNDWND
     block: "salsa20"
