@@ -401,8 +401,8 @@ optimize_for_users() {
         KCP_SNDWND=1536           # افزایش برای جلوگیری از buffer overflow
         KCP_SMUXBUF=12582912      # 12MB - افزایش برای جلوگیری از buffer overflow
         KCP_STREAMBUF=6291456     # 6MB - افزایش برای جلوگیری از buffer overflow
-        PCAP_SOCKBUF_CLIENT=12582912  # 12MB - افزایش برای جلوگیری از buffer overflow
-        PCAP_SOCKBUF_SERVER=25165824  # 24MB - افزایش برای جلوگیری از buffer overflow
+        PCAP_SOCKBUF_CLIENT=16777216  # 16MB (power of 2) - افزایش برای جلوگیری از buffer overflow
+        PCAP_SOCKBUF_SERVER=33554432  # 32MB (power of 2) - افزایش برای جلوگیری از buffer overflow
     elif [ "$USER_COUNT" -lt 300 ]; then
         # 100-300 کاربر - تنظیمات متوسط
         # بافرهای متوسط برای جلوگیری از خطای "No buffer space available"
@@ -424,7 +424,7 @@ optimize_for_users() {
         KCP_SMUXBUF=67108864      # 64MB - افزایش از 32MB برای جلوگیری از خطای buffer space
         KCP_STREAMBUF=33554432    # 32MB - افزایش از 16MB برای جلوگیری از خطای buffer space
         PCAP_SOCKBUF_CLIENT=67108864  # 64MB - افزایش از 32MB برای جلوگیری از خطای buffer space
-        PCAP_SOCKBUF_SERVER=104857600 # 100MB - حداکثر مجاز paqet (افزایش از 64MB برای جلوگیری از خطای buffer space)
+        PCAP_SOCKBUF_SERVER=134217728 # 128MB (power of 2) - افزایش از 64MB برای جلوگیری از خطای buffer space
     fi
 }
 
@@ -814,7 +814,7 @@ optimize_for_users() {
         KCP_SNDWND=1536           # افزایش برای جلوگیری از buffer overflow
         KCP_SMUXBUF=12582912      # 12MB - افزایش برای جلوگیری از buffer overflow
         KCP_STREAMBUF=6291456     # 6MB - افزایش برای جلوگیری از buffer overflow
-        PCAP_SOCKBUF_CLIENT=12582912  # 12MB - افزایش برای جلوگیری از buffer overflow
+        PCAP_SOCKBUF_CLIENT=16777216  # 16MB (power of 2) - افزایش برای جلوگیری از buffer overflow
     elif [ "$USER_COUNT" -lt 300 ]; then
         # 100-300 کاربر - تنظیمات متوسط
         # بافرهای متوسط برای جلوگیری از خطای "No buffer space available"
