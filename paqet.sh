@@ -433,7 +433,7 @@ optimize_for_users() {
         KCP_CONN=4
         KCP_RCVWND=16384          # افزایش از 8192 به 16384 برای ترافیک بسیار بالا
         KCP_SNDWND=16384          # افزایش از 8192 به 16384 برای ترافیک بسیار بالا
-        KCP_SMUXBUF=134217728     # 128MB - افزایش از 64MB برای ترافیک بسیار بالا
+        KCP_SMUXBUF=104857600     # 100MB - حداکثر مجاز (مشابه PCAP sockbuf) برای ترافیک بسیار بالا
         KCP_STREAMBUF=67108864    # 64MB - افزایش از 32MB برای ترافیک بسیار بالا
         PCAP_SOCKBUF_CLIENT=67108864  # 64MB - افزایش از 32MB برای جلوگیری از خطای buffer space
         PCAP_SOCKBUF_SERVER=67108864  # 64MB (power of 2, max allowed by Paqet is 100MB) - افزایش از 32MB برای جلوگیری از خطای buffer space
@@ -870,7 +870,7 @@ optimize_for_users() {
         KCP_CONN=4
         KCP_RCVWND=16384          # افزایش از 8192 به 16384 برای ترافیک بسیار بالا
         KCP_SNDWND=16384          # افزایش از 8192 به 16384 برای ترافیک بسیار بالا
-        KCP_SMUXBUF=134217728     # 128MB - افزایش از 64MB برای ترافیک بسیار بالا
+        KCP_SMUXBUF=104857600     # 100MB - حداکثر مجاز (مشابه PCAP sockbuf) برای ترافیک بسیار بالا
         KCP_STREAMBUF=67108864    # 64MB - افزایش از 32MB برای ترافیک بسیار بالا
         PCAP_SOCKBUF_CLIENT=67108864  # 64MB - افزایش از 32MB برای جلوگیری از خطای buffer space
     fi
