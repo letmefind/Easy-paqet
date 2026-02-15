@@ -547,11 +547,20 @@ optimize_network() {
             sed -i '/^$/N;/^\n$/d' /etc/sysctl.conf 2>/dev/null || true
         fi
         
-        # حذف تنظیمات BBR قبلی (اگر در بخش Paqet نبودند)
+        # حذف تنظیمات BBR و buffer قدیمی (اگر در بخش Paqet نبودند)
         if grep -qE "^net\.core\.default_qdisc=|^net\.ipv4\.tcp_congestion_control=" /etc/sysctl.conf 2>/dev/null; then
             sed -i '/^net\.core\.default_qdisc=/d' /etc/sysctl.conf 2>/dev/null || true
             sed -i '/^net\.ipv4\.tcp_congestion_control=/d' /etc/sysctl.conf 2>/dev/null || true
         fi
+        
+        # حذف تنظیمات buffer قدیمی که ممکن است مقادیر کم داشته باشند
+        # حذف تنظیمات rmem/wmem که کمتر از 100MB هستند (احتمالاً تنظیمات قدیمی)
+        sed -i '/^net\.core\.rmem_max = [0-9]\{1,8\}$/d' /etc/sysctl.conf 2>/dev/null || true
+        sed -i '/^net\.core\.wmem_max = [0-9]\{1,8\}$/d' /etc/sysctl.conf 2>/dev/null || true
+        sed -i '/^net\.core\.rmem_default = [0-9]\{1,8\}$/d' /etc/sysctl.conf 2>/dev/null || true
+        sed -i '/^net\.core\.wmem_default = [0-9]\{1,8\}$/d' /etc/sysctl.conf 2>/dev/null || true
+        sed -i '/^net\.ipv4\.tcp_rmem = .* [0-9]\{1,8\}$/d' /etc/sysctl.conf 2>/dev/null || true
+        sed -i '/^net\.ipv4\.tcp_wmem = .* [0-9]\{1,8\}$/d' /etc/sysctl.conf 2>/dev/null || true
         
         # بهینه‌سازی‌های TCP برای ترافیک بالا و شبکه‌های با اختلال
         # این تنظیمات همچنین از خطای "No buffer space available" جلوگیری می‌کند
@@ -957,6 +966,20 @@ optimize_network() {
             # حذف خط خالی اضافی در انتها (اگر وجود داشته باشد)
             sed -i ':a;N;$!ba;s/\n\n\n*/\n\n/g' /etc/sysctl.conf 2>/dev/null || true
         fi
+        
+        # حذف تنظیمات BBR و buffer قدیمی (اگر در بخش Paqet نبودند)
+        if grep -qE "^net\.core\.default_qdisc=|^net\.ipv4\.tcp_congestion_control=" /etc/sysctl.conf 2>/dev/null; then
+            sed -i '/^net\.core\.default_qdisc=/d' /etc/sysctl.conf 2>/dev/null || true
+            sed -i '/^net\.ipv4\.tcp_congestion_control=/d' /etc/sysctl.conf 2>/dev/null || true
+        fi
+        
+        # حذف تنظیمات buffer قدیمی که ممکن است مقادیر کم داشته باشند
+        sed -i '/^net\.core\.rmem_max = [0-9]\{1,8\}$/d' /etc/sysctl.conf 2>/dev/null || true
+        sed -i '/^net\.core\.wmem_max = [0-9]\{1,8\}$/d' /etc/sysctl.conf 2>/dev/null || true
+        sed -i '/^net\.core\.rmem_default = [0-9]\{1,8\}$/d' /etc/sysctl.conf 2>/dev/null || true
+        sed -i '/^net\.core\.wmem_default = [0-9]\{1,8\}$/d' /etc/sysctl.conf 2>/dev/null || true
+        sed -i '/^net\.ipv4\.tcp_rmem = .* [0-9]\{1,8\}$/d' /etc/sysctl.conf 2>/dev/null || true
+        sed -i '/^net\.ipv4\.tcp_wmem = .* [0-9]\{1,8\}$/d' /etc/sysctl.conf 2>/dev/null || true
         
         # بهینه‌سازی‌های TCP برای ترافیک بالا و شبکه‌های با اختلال
         if [ "$LANG_SELECTED" == "en" ]; then
