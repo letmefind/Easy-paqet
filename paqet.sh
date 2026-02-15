@@ -431,10 +431,10 @@ optimize_for_users() {
         # بافرهای بزرگ برای جلوگیری از خطای "No buffer space available"
         KCP_MODE="fast3"
         KCP_CONN=4
-        KCP_RCVWND=8192           # افزایش از 4096 به 8192 برای جلوگیری از خطای buffer space
-        KCP_SNDWND=8192           # افزایش از 4096 به 8192 برای جلوگیری از خطای buffer space
-        KCP_SMUXBUF=67108864      # 64MB - افزایش از 32MB برای جلوگیری از خطای buffer space
-        KCP_STREAMBUF=33554432    # 32MB - افزایش از 16MB برای جلوگیری از خطای buffer space
+        KCP_RCVWND=16384          # افزایش از 8192 به 16384 برای ترافیک بسیار بالا
+        KCP_SNDWND=16384          # افزایش از 8192 به 16384 برای ترافیک بسیار بالا
+        KCP_SMUXBUF=134217728     # 128MB - افزایش از 64MB برای ترافیک بسیار بالا
+        KCP_STREAMBUF=67108864    # 64MB - افزایش از 32MB برای ترافیک بسیار بالا
         PCAP_SOCKBUF_CLIENT=67108864  # 64MB - افزایش از 32MB برای جلوگیری از خطای buffer space
         PCAP_SOCKBUF_SERVER=67108864  # 64MB (power of 2, max allowed by Paqet is 100MB) - افزایش از 32MB برای جلوگیری از خطای buffer space
     fi
@@ -868,10 +868,10 @@ optimize_for_users() {
         # بافرهای بزرگ برای جلوگیری از خطای "No buffer space available"
         KCP_MODE="fast3"
         KCP_CONN=4
-        KCP_RCVWND=8192           # افزایش از 4096 به 8192 برای جلوگیری از خطای buffer space
-        KCP_SNDWND=8192           # افزایش از 4096 به 8192 برای جلوگیری از خطای buffer space
-        KCP_SMUXBUF=67108864      # 64MB - افزایش از 32MB برای جلوگیری از خطای buffer space
-        KCP_STREAMBUF=33554432    # 32MB - افزایش از 16MB برای جلوگیری از خطای buffer space
+        KCP_RCVWND=16384          # افزایش از 8192 به 16384 برای ترافیک بسیار بالا
+        KCP_SNDWND=16384          # افزایش از 8192 به 16384 برای ترافیک بسیار بالا
+        KCP_SMUXBUF=134217728     # 128MB - افزایش از 64MB برای ترافیک بسیار بالا
+        KCP_STREAMBUF=67108864    # 64MB - افزایش از 32MB برای ترافیک بسیار بالا
         PCAP_SOCKBUF_CLIENT=67108864  # 64MB - افزایش از 32MB برای جلوگیری از خطای buffer space
     fi
 }
