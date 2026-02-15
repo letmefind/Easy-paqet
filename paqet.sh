@@ -1272,6 +1272,21 @@ case "$USER_PROFILE" in
             read -p "تعداد اتصالات (conn) [$KCP_CONN]: " KCP_CONN_INPUT
         fi
         KCP_CONN=${KCP_CONN_INPUT:-$KCP_CONN}
+        
+        # هشدار برای ترکیب fast3 با conn=1
+        if [ "$KCP_MODE" = "fast3" ] && [ "$KCP_CONN" = "1" ]; then
+            echo ""
+            if [ "$LANG_SELECTED" == "en" ]; then
+                print_warning "Note: fast3 mode with conn=1 may not be optimal."
+                print_info "fast3 is designed for high traffic and typically works better with conn=2-3."
+                print_info "Consider using conn=3 for better performance, or switch to fast/fast2 mode."
+            else
+                print_warning "توجه: حالت fast3 با conn=1 ممکن است بهینه نباشد."
+                print_info "fast3 برای ترافیک بالا طراحی شده و معمولاً با conn=2-3 بهتر کار می‌کند."
+                print_info "برای عملکرد بهتر، از conn=3 استفاده کنید یا به حالت fast/fast2 تغییر دهید."
+            fi
+            echo ""
+        fi
         KCP_RCVWND=512
         KCP_SNDWND=512
         KCP_SMUXBUF=4194304
@@ -2040,12 +2055,30 @@ setup_client() {
                 *) KCP_MODE="fast" ;;
             esac
             
+            # تنظیم خودکار conn بر اساس mode
+            set_conn_by_mode
+            
             if [ "$LANG_SELECTED" == "en" ]; then
-                read -p "Number of connections (conn) [1]: " KCP_CONN
+                read -p "Number of connections (conn) [$KCP_CONN]: " KCP_CONN_INPUT
             else
-                read -p "تعداد اتصالات (conn) [1]: " KCP_CONN
+                read -p "تعداد اتصالات (conn) [$KCP_CONN]: " KCP_CONN_INPUT
             fi
-            KCP_CONN=${KCP_CONN:-1}
+            KCP_CONN=${KCP_CONN_INPUT:-$KCP_CONN}
+            
+            # هشدار برای ترکیب fast3 با conn=1
+            if [ "$KCP_MODE" = "fast3" ] && [ "$KCP_CONN" = "1" ]; then
+                echo ""
+                if [ "$LANG_SELECTED" == "en" ]; then
+                    print_warning "Note: fast3 mode with conn=1 may not be optimal."
+                    print_info "fast3 is designed for high traffic and typically works better with conn=2-3."
+                    print_info "Consider using conn=3 for better performance, or switch to fast/fast2 mode."
+                else
+                    print_warning "توجه: حالت fast3 با conn=1 ممکن است بهینه نباشد."
+                    print_info "fast3 برای ترافیک بالا طراحی شده و معمولاً با conn=2-3 بهتر کار می‌کند."
+                    print_info "برای عملکرد بهتر، از conn=3 استفاده کنید یا به حالت fast/fast2 تغییر دهید."
+                fi
+                echo ""
+            fi
             KCP_RCVWND=2048           # افزایش برای جلوگیری از خطای buffer space
             KCP_SNDWND=2048           # افزایش برای جلوگیری از خطای buffer space
             KCP_SMUXBUF=16777216      # 16MB - افزایش برای جلوگیری از خطای buffer space
