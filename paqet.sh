@@ -865,13 +865,13 @@ optimize_for_users() {
         PCAP_SOCKBUF_CLIENT=16777216  # 16MB - افزایش از 8MB برای جلوگیری از خطای buffer space
     else
         # بالای 300 کاربر - تنظیمات پیشرفته (بهینه شده برای ترافیک بالا)
-        # بافرهای بزرگ برای جلوگیری از خطای "No buffer space available"
+        # استفاده از fast3 با conn: 3 و تنظیمات پیش‌فرض Paqet (بدون buffer های اضافی)
         KCP_MODE="fast3"
-        KCP_CONN=4
-        KCP_RCVWND=16384          # افزایش از 8192 به 16384 برای ترافیک بسیار بالا
-        KCP_SNDWND=16384          # افزایش از 8192 به 16384 برای ترافیک بسیار بالا
-        KCP_SMUXBUF=104857600     # 100MB - حداکثر مجاز (مشابه PCAP sockbuf) برای ترافیک بسیار بالا
-        KCP_STREAMBUF=67108864    # 64MB - افزایش از 32MB برای ترافیک بسیار بالا
+        KCP_CONN=3                # conn: 3 برای تعادل بهتر بین عملکرد و پایداری
+        KCP_RCVWND=""             # استفاده از پیش‌فرض Paqet
+        KCP_SNDWND=""             # استفاده از پیش‌فرض Paqet
+        KCP_SMUXBUF=""            # استفاده از پیش‌فرض Paqet
+        KCP_STREAMBUF=""          # استفاده از پیش‌فرض Paqet
         PCAP_SOCKBUF_CLIENT=67108864  # 64MB - افزایش از 32MB برای جلوگیری از خطای buffer space
     fi
 }
@@ -1263,12 +1263,15 @@ case "$USER_PROFILE" in
             *) KCP_MODE="fast" ;;
         esac
         
+        # تنظیم خودکار conn بر اساس mode
+        set_conn_by_mode
+        
         if [ "$LANG_SELECTED" == "en" ]; then
-            read -p "Number of connections (conn) [1]: " KCP_CONN
+            read -p "Number of connections (conn) [$KCP_CONN]: " KCP_CONN_INPUT
         else
-            read -p "تعداد اتصالات (conn) [1]: " KCP_CONN
+            read -p "تعداد اتصالات (conn) [$KCP_CONN]: " KCP_CONN_INPUT
         fi
-        KCP_CONN=${KCP_CONN:-1}
+        KCP_CONN=${KCP_CONN_INPUT:-$KCP_CONN}
         KCP_RCVWND=512
         KCP_SNDWND=512
         KCP_SMUXBUF=4194304
