@@ -246,7 +246,7 @@ transport:
   conn: 2
   kcp:
     mode: "fast2"
-    mtu: 1480
+    mtu: 1350
     rcvwnd: 2048
     sndwnd: 2048
     block: "salsa20"
