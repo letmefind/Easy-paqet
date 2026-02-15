@@ -1381,13 +1381,9 @@ transport:
   conn: $KCP_CONN
   kcp:
     mode: "$KCP_MODE"
-    mtu: 1350
-$(if [ -n "$KCP_RCVWND" ]; then echo "    rcvwnd: $KCP_RCVWND"; fi)
-$(if [ -n "$KCP_SNDWND" ]; then echo "    sndwnd: $KCP_SNDWND"; fi)
+    mtu: 1350$(if [ -n "$KCP_RCVWND" ]; then echo -e "\n    rcvwnd: $KCP_RCVWND"; fi)$(if [ -n "$KCP_SNDWND" ]; then echo -e "\n    sndwnd: $KCP_SNDWND"; fi)
     block: "salsa20"
-    key: "$SECRET_KEY"
-$(if [ -n "$KCP_SMUXBUF" ]; then echo "    smuxbuf: $KCP_SMUXBUF"; fi)
-$(if [ -n "$KCP_STREAMBUF" ]; then echo "    streambuf: $KCP_STREAMBUF"; fi)
+    key: "$SECRET_KEY"$(if [ -n "$KCP_SMUXBUF" ]; then echo -e "\n    smuxbuf: $KCP_SMUXBUF"; fi)$(if [ -n "$KCP_STREAMBUF" ]; then echo -e "\n    streambuf: $KCP_STREAMBUF"; fi)
 EOF
 
 if [ "$USE_TYPE" == "1" ]; then
@@ -1765,13 +1761,9 @@ transport:
   conn: $KCP_CONN
   kcp:
     mode: "$KCP_MODE"
-    mtu: 1350
-$(if [ -n "$KCP_RCVWND" ]; then echo "    rcvwnd: $KCP_RCVWND"; fi)
-$(if [ -n "$KCP_SNDWND" ]; then echo "    sndwnd: $KCP_SNDWND"; fi)
+    mtu: 1350$(if [ -n "$KCP_RCVWND" ]; then echo -e "\n    rcvwnd: $KCP_RCVWND"; fi)$(if [ -n "$KCP_SNDWND" ]; then echo -e "\n    sndwnd: $KCP_SNDWND"; fi)
     block: "salsa20"
-    key: "$SECRET_KEY"
-$(if [ -n "$KCP_SMUXBUF" ]; then echo "    smuxbuf: $KCP_SMUXBUF"; fi)
-$(if [ -n "$KCP_STREAMBUF" ]; then echo "    streambuf: $KCP_STREAMBUF"; fi)
+    key: "$SECRET_KEY"$(if [ -n "$KCP_SMUXBUF" ]; then echo -e "\n    smuxbuf: $KCP_SMUXBUF"; fi)$(if [ -n "$KCP_STREAMBUF" ]; then echo -e "\n    streambuf: $KCP_STREAMBUF"; fi)
 EOF
     
     if [ "$LANG_SELECTED" == "en" ]; then
@@ -2176,13 +2168,9 @@ transport:
   conn: $KCP_CONN
   kcp:
     mode: "$KCP_MODE"
-    mtu: 1350
-$(if [ -n "$KCP_RCVWND" ]; then echo "    rcvwnd: $KCP_RCVWND"; fi)
-$(if [ -n "$KCP_SNDWND" ]; then echo "    sndwnd: $KCP_SNDWND"; fi)
+    mtu: 1350$(if [ -n "$KCP_RCVWND" ]; then echo -e "\n    rcvwnd: $KCP_RCVWND"; fi)$(if [ -n "$KCP_SNDWND" ]; then echo -e "\n    sndwnd: $KCP_SNDWND"; fi)
     block: "salsa20"
-    key: "$SECRET_KEY"
-$(if [ -n "$KCP_SMUXBUF" ]; then echo "    smuxbuf: $KCP_SMUXBUF"; fi)
-$(if [ -n "$KCP_STREAMBUF" ]; then echo "    streambuf: $KCP_STREAMBUF"; fi)
+    key: "$SECRET_KEY"$(if [ -n "$KCP_SMUXBUF" ]; then echo -e "\n    smuxbuf: $KCP_SMUXBUF"; fi)$(if [ -n "$KCP_STREAMBUF" ]; then echo -e "\n    streambuf: $KCP_STREAMBUF"; fi)
 EOF
     
     if [ "$USE_TYPE" == "1" ]; then
