@@ -448,6 +448,17 @@ optimize_network() {
         print_step "بهینه‌سازی تنظیمات شبکه (BBR, TCP, sysctl)..."
     fi
     
+    # حذف تنظیمات قبلی BBR از sysctl.conf (اگر وجود داشته باشد)
+    if grep -qE "^net\.core\.default_qdisc=|^net\.ipv4\.tcp_congestion_control=" /etc/sysctl.conf 2>/dev/null; then
+        if [ "$LANG_SELECTED" == "en" ]; then
+            print_info "Removing previous BBR settings from sysctl.conf..."
+        else
+            print_info "حذف تنظیمات قبلی BBR از sysctl.conf..."
+        fi
+        sed -i '/^net\.core\.default_qdisc=/d' /etc/sysctl.conf 2>/dev/null || true
+        sed -i '/^net\.ipv4\.tcp_congestion_control=/d' /etc/sysctl.conf 2>/dev/null || true
+    fi
+    
     # بررسی و فعال کردن BBR
     if [ -f /proc/sys/net/ipv4/tcp_congestion_control ]; then
         CURRENT_CC=$(cat /proc/sys/net/ipv4/tcp_congestion_control 2>/dev/null || echo "")
@@ -534,6 +545,12 @@ optimize_network() {
             # حذف خطوط خالی اضافی در انتها
             sed -i -e :a -e '/^\n*$/{$d;N;ba' -e '}' /etc/sysctl.conf 2>/dev/null || \
             sed -i '/^$/N;/^\n$/d' /etc/sysctl.conf 2>/dev/null || true
+        fi
+        
+        # حذف تنظیمات BBR قبلی (اگر در بخش Paqet نبودند)
+        if grep -qE "^net\.core\.default_qdisc=|^net\.ipv4\.tcp_congestion_control=" /etc/sysctl.conf 2>/dev/null; then
+            sed -i '/^net\.core\.default_qdisc=/d' /etc/sysctl.conf 2>/dev/null || true
+            sed -i '/^net\.ipv4\.tcp_congestion_control=/d' /etc/sysctl.conf 2>/dev/null || true
         fi
         
         # بهینه‌سازی‌های TCP برای ترافیک بالا و شبکه‌های با اختلال
@@ -859,6 +876,17 @@ optimize_network() {
         echo -e "${BLUE}ℹ${NC} Optimizing network settings..."
     else
         echo -e "${BLUE}ℹ${NC} بهینه‌سازی تنظیمات شبکه..."
+    fi
+    
+    # حذف تنظیمات قبلی BBR از sysctl.conf (اگر وجود داشته باشد)
+    if grep -qE "^net\.core\.default_qdisc=|^net\.ipv4\.tcp_congestion_control=" /etc/sysctl.conf 2>/dev/null; then
+        if [ "$LANG_SELECTED" == "en" ]; then
+            echo -e "${BLUE}ℹ${NC} Removing previous BBR settings from sysctl.conf..."
+        else
+            echo -e "${BLUE}ℹ${NC} حذف تنظیمات قبلی BBR از sysctl.conf..."
+        fi
+        sed -i '/^net\.core\.default_qdisc=/d' /etc/sysctl.conf 2>/dev/null || true
+        sed -i '/^net\.ipv4\.tcp_congestion_control=/d' /etc/sysctl.conf 2>/dev/null || true
     fi
     
     # بررسی و فعال کردن BBR
