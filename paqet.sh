@@ -1703,12 +1703,15 @@ setup_server() {
                 *) KCP_MODE="fast" ;;
             esac
             
+            # تنظیم خودکار conn بر اساس mode
+            set_conn_by_mode
+            
             if [ "$LANG_SELECTED" == "en" ]; then
-                read -p "Number of connections (conn) [1]: " KCP_CONN
+                read -p "Number of connections (conn) [$KCP_CONN]: " KCP_CONN_INPUT
             else
-                read -p "تعداد اتصالات (conn) [1]: " KCP_CONN
+                read -p "تعداد اتصالات (conn) [$KCP_CONN]: " KCP_CONN_INPUT
             fi
-            KCP_CONN=${KCP_CONN:-1}
+            KCP_CONN=${KCP_CONN_INPUT:-$KCP_CONN}
             KCP_RCVWND=2048           # افزایش برای جلوگیری از خطای buffer space
             KCP_SNDWND=2048           # افزایش برای جلوگیری از خطای buffer space
             KCP_SMUXBUF=16777216      # 16MB - افزایش برای جلوگیری از خطای buffer space
