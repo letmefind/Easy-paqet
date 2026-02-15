@@ -428,13 +428,13 @@ optimize_for_users() {
         PCAP_SOCKBUF_SERVER=33554432  # 32MB - افزایش از 16MB برای جلوگیری از خطای buffer space
     else
         # بالای 300 کاربر - تنظیمات پیشرفته (بهینه شده برای ترافیک بالا)
-        # بافرهای بزرگ برای جلوگیری از خطای "No buffer space available"
+        # استفاده از fast3 با conn: 3 و تنظیمات پیش‌فرض Paqet (بدون buffer های اضافی)
         KCP_MODE="fast3"
-        KCP_CONN=4
-        KCP_RCVWND=16384          # افزایش از 8192 به 16384 برای ترافیک بسیار بالا
-        KCP_SNDWND=16384          # افزایش از 8192 به 16384 برای ترافیک بسیار بالا
-        KCP_SMUXBUF=104857600     # 100MB - حداکثر مجاز (مشابه PCAP sockbuf) برای ترافیک بسیار بالا
-        KCP_STREAMBUF=67108864    # 64MB - افزایش از 32MB برای ترافیک بسیار بالا
+        KCP_CONN=3                # conn: 3 برای تعادل بهتر بین عملکرد و پایداری
+        KCP_RCVWND=""             # استفاده از پیش‌فرض Paqet
+        KCP_SNDWND=""             # استفاده از پیش‌فرض Paqet
+        KCP_SMUXBUF=""            # استفاده از پیش‌فرض Paqet
+        KCP_STREAMBUF=""          # استفاده از پیش‌فرض Paqet
         PCAP_SOCKBUF_CLIENT=67108864  # 64MB - افزایش از 32MB برای جلوگیری از خطای buffer space
         PCAP_SOCKBUF_SERVER=67108864  # 64MB (power of 2, max allowed by Paqet is 100MB) - افزایش از 32MB برای جلوگیری از خطای buffer space
     fi
@@ -1382,12 +1382,12 @@ transport:
   kcp:
     mode: "$KCP_MODE"
     mtu: 1350
-    rcvwnd: $KCP_RCVWND
-    sndwnd: $KCP_SNDWND
+$(if [ -n "$KCP_RCVWND" ]; then echo "    rcvwnd: $KCP_RCVWND"; fi)
+$(if [ -n "$KCP_SNDWND" ]; then echo "    sndwnd: $KCP_SNDWND"; fi)
     block: "salsa20"
     key: "$SECRET_KEY"
-    smuxbuf: $KCP_SMUXBUF
-    streambuf: $KCP_STREAMBUF
+$(if [ -n "$KCP_SMUXBUF" ]; then echo "    smuxbuf: $KCP_SMUXBUF"; fi)
+$(if [ -n "$KCP_STREAMBUF" ]; then echo "    streambuf: $KCP_STREAMBUF"; fi)
 EOF
 
 if [ "$USE_TYPE" == "1" ]; then
@@ -1766,12 +1766,12 @@ transport:
   kcp:
     mode: "$KCP_MODE"
     mtu: 1350
-    rcvwnd: $KCP_RCVWND
-    sndwnd: $KCP_SNDWND
+$(if [ -n "$KCP_RCVWND" ]; then echo "    rcvwnd: $KCP_RCVWND"; fi)
+$(if [ -n "$KCP_SNDWND" ]; then echo "    sndwnd: $KCP_SNDWND"; fi)
     block: "salsa20"
     key: "$SECRET_KEY"
-    smuxbuf: $KCP_SMUXBUF
-    streambuf: $KCP_STREAMBUF
+$(if [ -n "$KCP_SMUXBUF" ]; then echo "    smuxbuf: $KCP_SMUXBUF"; fi)
+$(if [ -n "$KCP_STREAMBUF" ]; then echo "    streambuf: $KCP_STREAMBUF"; fi)
 EOF
     
     if [ "$LANG_SELECTED" == "en" ]; then
@@ -2177,12 +2177,12 @@ transport:
   kcp:
     mode: "$KCP_MODE"
     mtu: 1350
-    rcvwnd: $KCP_RCVWND
-    sndwnd: $KCP_SNDWND
+$(if [ -n "$KCP_RCVWND" ]; then echo "    rcvwnd: $KCP_RCVWND"; fi)
+$(if [ -n "$KCP_SNDWND" ]; then echo "    sndwnd: $KCP_SNDWND"; fi)
     block: "salsa20"
     key: "$SECRET_KEY"
-    smuxbuf: $KCP_SMUXBUF
-    streambuf: $KCP_STREAMBUF
+$(if [ -n "$KCP_SMUXBUF" ]; then echo "    smuxbuf: $KCP_SMUXBUF"; fi)
+$(if [ -n "$KCP_STREAMBUF" ]; then echo "    streambuf: $KCP_STREAMBUF"; fi)
 EOF
     
     if [ "$USE_TYPE" == "1" ]; then
