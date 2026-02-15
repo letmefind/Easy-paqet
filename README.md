@@ -276,7 +276,7 @@ forward:
 - **rcvwnd/sndwnd**: Receive/Send window sizes
   - Larger windows = better throughput but more memory
 
-- **mtu**: Maximum Transmission Unit (default: 1480)
+- **mtu**: Maximum Transmission Unit (default: 1350)
   - Use MTU discovery tool to find optimal value
 
 #### Encryption Algorithms
@@ -358,7 +358,7 @@ The tool will:
 2. Validate stability with zero packet loss tolerance
 3. Recommend optimal MTU and MSS
 
-**Default MTU**: 1480 (recommended for most networks)
+**Default MTU**: 1350 (recommended for most networks)
 
 ---
 
@@ -563,7 +563,7 @@ transport:
   conn: 4                    # Increase for more throughput
   kcp:
     mode: "fast3"            # Maximum speed
-    mtu: 1480                # Use MTU discovery result
+    mtu: 1350                # Use MTU discovery result
     rcvwnd: 8192             # Large receive window
     sndwnd: 8192             # Large send window
     block: "salsa20"         # Encryption algorithm
