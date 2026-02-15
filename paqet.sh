@@ -3005,9 +3005,9 @@ discover_optimal_mtu() {
     echo ""
     
     local max_mtu=0
-    local tested_mtu=1500
+    local tested_mtu=1350
     
-    print_step "Scanning MTU range: 1500 → 1200"
+    print_step "Scanning MTU range: 1350 → 1200"
     echo ""
     
     while [ $tested_mtu -ge 1200 ]; do
@@ -3025,7 +3025,7 @@ discover_optimal_mtu() {
     done
     
     if [ $max_mtu -eq 0 ]; then
-        print_error "No working MTU found in range 1200-1500"
+        print_error "No working MTU found in range 1200-1350"
         print_info "Trying lower values..."
         
         tested_mtu=1190
@@ -3109,6 +3109,14 @@ discover_optimal_mtu() {
     echo -e "    ${CYAN}ipv4:${NC}"
     echo -e "      ${CYAN}addr:${NC} \"YOUR_IP:$stable_mtu\""
     echo ""
+    print_separator
+    echo ""
+    
+    # Store result for later display
+    DISCOVERED_MTU=$stable_mtu
+    DISCOVERED_MSS=$mss
+    
+    return 0
 }
 
 find_optimal_mtu() {
@@ -3253,32 +3261,77 @@ find_optimal_mtu() {
     echo ""
     
     # Run discovery
+    DISCOVERED_MTU=""
+    DISCOVERED_MSS=""
+    
     if discover_optimal_mtu "$TARGET_IP" "$TEST_DURATION"; then
-        echo ""
-        if [ "$LANG_SELECTED" == "en" ]; then
-            print_success "MTU discovery completed!"
+        # If discovery was successful, show summary
+        if [ -n "$DISCOVERED_MTU" ] && [ -n "$DISCOVERED_MSS" ]; then
             echo ""
-            print_info "You can now use the recommended MTU value when setting up tunnels."
-            print_info "The default MTU in this script is set to 1480."
+            echo ""
+            print_separator
+            echo ""
+            if [ "$LANG_SELECTED" == "en" ]; then
+                print_success "MTU discovery completed successfully!"
+                echo ""
+                echo -e "  ${BOLD}Summary:${NC}"
+                echo -e "  ${BOLD}Recommended MTU:${NC}     ${GREEN}$DISCOVERED_MTU${NC}"
+                echo -e "  ${BOLD}Recommended MSS:${NC}     ${GREEN}$DISCOVERED_MSS${NC} (MTU - 40)"
+                echo ""
+                print_info "You can now use the recommended MTU value when setting up tunnels."
+                print_info "The default MTU in this script is set to 1480."
+            else
+                print_success "یافتن MTU با موفقیت کامل شد!"
+                echo ""
+                echo -e "  ${BOLD}خلاصه:${NC}"
+                echo -e "  ${BOLD}MTU پیشنهادی:${NC}     ${GREEN}$DISCOVERED_MTU${NC}"
+                echo -e "  ${BOLD}MSS پیشنهادی:${NC}     ${GREEN}$DISCOVERED_MSS${NC} (MTU - 40)"
+                echo ""
+                print_info "اکنون می‌توانید از مقدار MTU پیشنهادی هنگام راه‌اندازی تونل‌ها استفاده کنید."
+                print_info "MTU پیش‌فرض در این اسکریپت 1480 تنظیم شده است."
+            fi
+            print_separator
+            echo ""
         else
-            print_success "یافتن MTU کامل شد!"
             echo ""
-            print_info "اکنون می‌توانید از مقدار MTU پیشنهادی هنگام راه‌اندازی تونل‌ها استفاده کنید."
-            print_info "MTU پیش‌فرض در این اسکریپت 1480 تنظیم شده است."
+            echo ""
+            print_separator
+            echo ""
+            if [ "$LANG_SELECTED" == "en" ]; then
+                print_success "MTU discovery completed!"
+                echo ""
+                print_info "You can now use the recommended MTU value when setting up tunnels."
+                print_info "The default MTU in this script is set to 1480."
+            else
+                print_success "یافتن MTU کامل شد!"
+                echo ""
+                print_info "اکنون می‌توانید از مقدار MTU پیشنهادی هنگام راه‌اندازی تونل‌ها استفاده کنید."
+                print_info "MTU پیش‌فرض در این اسکریپت 1480 تنظیم شده است."
+            fi
+            print_separator
+            echo ""
         fi
     else
+        echo ""
+        echo ""
+        print_separator
+        echo ""
         if [ "$LANG_SELECTED" == "en" ]; then
             print_warning "MTU discovery had some issues, but you can still use the default MTU (1480)"
         else
             print_warning "یافتن MTU مشکلاتی داشت، اما می‌توانید از MTU پیش‌فرض (1480) استفاده کنید"
         fi
+        print_separator
+        echo ""
     fi
     
     echo ""
     if [ "$LANG_SELECTED" == "en" ]; then
-        read -p "Press Enter to continue..." < /dev/tty
+        echo -e "${CYAN}Press Enter to return to main menu...${NC}"
+        read -p "" < /dev/tty
     else
-        read -p "برای ادامه Enter را فشار دهید..." < /dev/tty
+        echo -e "${CYAN}برای بازگشت به منوی اصلی Enter را فشار دهید...${NC}"
+        read -p "" < /dev/tty
     fi
 }
 
