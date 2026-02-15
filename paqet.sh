@@ -242,6 +242,10 @@ auto_install_paqet() {
             if [ -n "$PAQET_FILE" ]; then
                 chmod +x "$PAQET_FILE"
                 cp "$PAQET_FILE" /usr/local/bin/paqet
+                # تنظیم capabilities برای دسترسی raw socket
+                if command -v setcap &>/dev/null; then
+                    setcap cap_net_raw,cap_net_admin+eip /usr/local/bin/paqet 2>/dev/null || true
+                fi
                 rm -rf "$TEMP_DIR"
                 if [ "$LANG_SELECTED" == "en" ]; then
                     print_success "Paqet installed from /root/paqet"
@@ -254,6 +258,10 @@ auto_install_paqet() {
         elif [ -n "$BIN_FILE" ]; then
             chmod +x "$BIN_FILE"
             cp "$BIN_FILE" /usr/local/bin/paqet
+            # تنظیم capabilities برای دسترسی raw socket
+            if command -v setcap &>/dev/null; then
+                setcap cap_net_raw,cap_net_admin+eip /usr/local/bin/paqet 2>/dev/null || true
+            fi
             if [ "$LANG_SELECTED" == "en" ]; then
                 print_success "Paqet installed from /root/paqet"
             else
@@ -313,6 +321,10 @@ auto_install_paqet() {
         else
             chmod +x "$PAQET_FILE"
             mv "$PAQET_FILE" /usr/local/bin/paqet
+            # تنظیم capabilities برای دسترسی raw socket
+            if command -v setcap &>/dev/null; then
+                setcap cap_net_raw,cap_net_admin+eip /usr/local/bin/paqet 2>/dev/null || true
+            fi
             if [ "$LANG_SELECTED" == "en" ]; then
                 print_success "Paqet installed"
             else
@@ -1358,6 +1370,8 @@ After=network.target
 [Service]
 Type=simple
 User=paqet
+AmbientCapabilities=CAP_NET_RAW CAP_NET_ADMIN
+CapabilityBoundingSet=CAP_NET_RAW CAP_NET_ADMIN
 ExecStart=/usr/local/bin/paqet run -c $CONFIG_FILE
 Restart=always
 RestartSec=5
@@ -1744,6 +1758,8 @@ After=network.target
 [Service]
 Type=simple
 User=paqet
+AmbientCapabilities=CAP_NET_RAW CAP_NET_ADMIN
+CapabilityBoundingSet=CAP_NET_RAW CAP_NET_ADMIN
 ExecStart=$PAQET_BINARY run -c $CONFIG_FILE
 Restart=always
 RestartSec=5
@@ -2167,6 +2183,8 @@ After=network.target
 [Service]
 Type=simple
 User=paqet
+AmbientCapabilities=CAP_NET_RAW CAP_NET_ADMIN
+CapabilityBoundingSet=CAP_NET_RAW CAP_NET_ADMIN
 ExecStart=$PAQET_BINARY run -c $CONFIG_FILE
 Restart=always
 RestartSec=5
