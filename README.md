@@ -1,16 +1,15 @@
-# 🚀 Stealth Multiplex Tunnel Xray
+# 🚀 Paqet Tunnel Manager
 
 <div align="center">
 
 [![English](https://img.shields.io/badge/Language-English-blue.svg)](README.md)
 [![Persian](https://img.shields.io/badge/زبان-فارسی-green.svg)](README_FA.md)
-[![Xray Version](https://img.shields.io/badge/Xray-v26.2.2-success.svg)](https://github.com/XTLS/Xray-core/releases/tag/v26.2.2)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/letmefind/Easy-paqet?style=social)](https://github.com/letmefind/Easy-paqet)
 
-**A production-ready, high-performance stealth tunnel solution with multiple transport protocols and advanced optimizations**
+**A production-ready, high-performance bidirectional packet-level proxy using raw sockets and KCP protocol**
 
-[Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Support](#-support)
+[Features](#-features) • [Quick Start](#-quick-start) • [Installation](#-installation) • [Configuration](#-configuration) • [Management](#-management)
 
 </div>
 
@@ -22,66 +21,57 @@
 - [Features](#-features)
 - [Quick Start](#-quick-start)
 - [Architecture](#-architecture)
-- [Transport Protocols](#-transport-protocols)
 - [Installation](#-installation)
 - [Configuration](#-configuration)
 - [Performance Optimizations](#-performance-optimizations)
 - [Management Tools](#-management-tools)
 - [Troubleshooting](#-troubleshooting)
-- [Documentation](#-documentation)
-- [Contributing](#-contributing)
-- [License](#-license)
+- [Support](#-support)
 
 ---
 
 ## 🎯 Overview
 
-**Stealth Multiplex Tunnel Xray** is a comprehensive, production-ready tunneling solution that provides:
+**Paqet** is a bidirectional packet-level proxy that uses raw sockets to bypass standard firewalls and KCP protocol for reliable, low-latency data transmission.
 
-- 🔒 **Maximum Stealth** - Advanced DPI bypass with Reality protocol
-- ⚡ **High Performance** - Optimized for speed and efficiency
-- 🌐 **Multiple Transports** - XHTTP, TCP, WebSocket, and GRPC support
-- 🛡️ **Enterprise Security** - TLS fingerprinting and certificate management
-- 📊 **Production Ready** - Comprehensive monitoring and management tools
+### Key Characteristics
 
-Built on **Xray-core v26.2.2** with cutting-edge optimizations for high user counts and maximum throughput.
+- 🔒 **Raw Socket Technology** - Bypasses standard firewall rules
+- ⚡ **KCP Protocol** - Reliable UDP-based protocol optimized for speed and latency
+- 🔐 **Strong Encryption** - Multiple encryption algorithms (Salsa20, AES, Blowfish, etc.)
+- 🛡️ **Stealth Service Names** - Services named as `udp-relay-*` for discretion
+- 📊 **Production Ready** - Comprehensive management tools and optimizations
+- 🎯 **Auto-Optimization** - Automatically tunes settings based on expected user count
 
 ---
 
 ## ✨ Features
 
-### 🚀 Transport Protocols
+### 🚀 Core Features
 
-| Protocol | Speed | Stealth | CDN Support | TLS | Best For |
-|----------|-------|---------|-------------|-----|----------|
-| **XHTTP + Reality** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ❌ | ✅ | Maximum stealth & DPI bypass |
-| **TCP Raw** | ⭐⭐⭐⭐⭐ | ⭐⭐ | ❌ | ❌ | Fastest performance |
-| **WebSocket** | ⭐⭐⭐⭐ | ⭐⭐⭐ | ✅ | ❌ | CDN & web proxies |
-| **GRPC** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ✅ | ❌ | High performance & CDN |
+- ✅ **Bidirectional Proxy** - Full-duplex packet forwarding
+- ✅ **Raw Socket Support** - Bypasses standard firewall rules
+- ✅ **KCP Protocol** - Fast, reliable UDP-based transport
+- ✅ **Multiple Encryption** - Salsa20, AES, Blowfish, CAST5, SM4
+- ✅ **Stealth Services** - Discreet service naming (`udp-relay-*`)
+- ✅ **Dedicated User** - Runs as `paqet` user (not root)
 
-### 🔒 Security & Stealth
+### ⚡ Performance Features
 
-- ✅ **Reality Protocol** - No real certificates needed, perfect forward secrecy
-- ✅ **TLS Fingerprinting** - Chrome browser mimicry
-- ✅ **Multiple Short IDs** - 20 unique identifiers for client distinction
-- ✅ **Decoy Sites** - Legitimate-looking websites for camouflage
-- ✅ **UUID Security** - Strong, unique identifiers per installation
+- ✅ **KCP Modes** - `normal`, `fast`, `fast2`, `fast3` for different speed/latency trade-offs
+- ✅ **Auto-Optimization** - Tunes buffers and windows based on user count
+- ✅ **BBR Support** - Automatic BBR congestion control
+- ✅ **MTU Discovery** - Built-in tool to find optimal MTU
+- ✅ **Sysctl Optimization** - Optional kernel parameter tuning
 
-### ⚡ Performance Optimizations
+### 🛠️ Management Features
 
-- ✅ **BBR Congestion Control** - Enabled by default for optimal throughput
-- ✅ **TCP Buffer Optimization** - Tuned for high bandwidth (128MB buffers)
-- ✅ **SplitHTTP Optimization** - CPU/RAM efficient settings for high user counts
-- ✅ **Memory Optimization** - Reduced startup memory usage (v26.2.2)
-- ✅ **Connection Tracking** - Optimized for 1M+ concurrent connections
-
-### 🎯 Advanced Features
-
-- ✅ **Multi-Port Support** - Dynamic port management
-- ✅ **Port-Preserving Routing** - Maintains port numbers through tunnel
-- ✅ **Multi-Hop Support** - Optional Server C for extended routing (A→B→C)
-- ✅ **Interactive Installation** - User-friendly setup wizard
-- ✅ **Comprehensive Tools** - Backup, monitoring, troubleshooting utilities
+- ✅ **Interactive Setup** - User-friendly installation wizard
+- ✅ **Config Management** - Create, edit, delete configurations
+- ✅ **Service Management** - Start, stop, restart, enable/disable services
+- ✅ **Log Management** - Control log levels per configuration
+- ✅ **Client Packages** - Generate ready-to-install client packages
+- ✅ **MTU Discovery** - Find optimal MTU for your network
 
 ---
 
@@ -91,76 +81,33 @@ Built on **Xray-core v26.2.2** with cutting-edge optimizations for high user cou
 
 - Linux server (Ubuntu 20.04+, Debian 11+, CentOS 8+)
 - Root or sudo access
-- At least 512MB RAM
+- At least 512MB RAM (2GB+ recommended)
 - Network connectivity
 
 ### Installation
 
 ```bash
-# Clone the repository
+# Download and run the unified script
+bash <(curl -fsSL https://raw.githubusercontent.com/letmefind/Easy-paqet/master/paqet.sh)
+```
+
+Or clone the repository:
+
+```bash
 git clone https://github.com/letmefind/Easy-paqet.git
 cd Easy-paqet
-```
-
-#### Option 1: Servers with Good Internet Connectivity (Recommended)
-
-If your server has direct access to GitHub and good internet speed:
-
-```bash
-# Run the main installer (it will download Xray automatically)
-sudo bash install
-```
-
-**What happens:**
-- The installer automatically downloads Xray from GitHub
-- Installs Xray and all dependencies
-- Configures the tunnel based on your choices
-
-#### Option 2: Servers with Limited Internet (China/Slow Networks)
-
-If your server has limited internet access or cannot access GitHub directly:
-
-```bash
-# Step 1: Install Xray offline first
-sudo bash install_xray_offline.sh
-
-# Step 2: Then run the main installer
-sudo bash install
-```
-
-**What happens:**
-- `install_xray_offline.sh` downloads Xray using multiple mirrors (GitHub, ghproxy, fastgit)
-- If all mirrors fail, it provides manual installation instructions
-- `install` then uses the already-installed Xray to configure the tunnel
-
-**Why two steps?**
-- `install_xray_offline.sh` handles Xray installation with fallback mirrors
-- `install` handles tunnel configuration (doesn't need to download Xray again)
-
-### Installation Options
-
-```bash
-# Interactive mode (recommended)
-sudo bash install
-
-# Auto-detect server type
-sudo bash install auto
-
-# Specific server type
-sudo bash install a    # Server A (Entry)
-sudo bash install b    # Server B (Intermediate)
-sudo bash install c    # Server C (Final Destination)
+sudo bash paqet.sh
 ```
 
 ### What Happens During Installation
 
-1. **Server Type Selection** - Choose A, B, or C
-2. **Transport Protocol** - Select XHTTP/TCP/WebSocket/GRPC
-3. **Configuration** - Enter connection details
-4. **Key Generation** - Reality keys generated automatically
-5. **Service Setup** - Systemd services configured
-6. **Optimization** - BBR and TCP buffers optimized
-7. **Firewall** - Rules configured automatically
+1. **Language Selection** - Choose English or Persian
+2. **Auto-Installation** - Paqet binary downloaded and installed automatically
+3. **User Creation** - `paqet` user created automatically
+4. **Network Optimization** - Optional BBR and sysctl optimizations
+5. **Configuration** - Interactive setup for server or client
+6. **Service Creation** - Systemd service created with discreet name
+7. **Client Package** - Option to generate client package
 
 ---
 
@@ -170,197 +117,45 @@ sudo bash install c    # Server C (Final Destination)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        Client Devices                        │
-└──────────────────────────┬──────────────────────────────────┘
+│                    Foreign Server (Kharej)                   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │         Paqet Server (udp-relay-tunnel1)            │   │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐          │   │
+│  │  │ Port 9999 │  │ Port 8888│  │ Port 7777│  ...     │   │
+│  │  └────┬─────┘  └────┬─────┘  └────┬─────┘          │   │
+│  │       │             │             │                 │   │
+│  │       └─────────────┴─────────────┘                 │   │
+│  │                    │                                  │   │
+│  │              [KCP Tunnel]                           │   │
+│  │         (Raw Socket + KCP)                           │   │
+│  └──────────────────────┬───────────────────────────────┘   │
+└──────────────────────────┼──────────────────────────────────┘
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    Server A (Entry)                          │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │ Port 80  │  │ Port 443 │  │ Port 8080│  │ Port 8443│   │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘   │
-│       │             │             │             │          │
-│       └─────────────┴─────────────┴─────────────┘          │
-│                          │                                  │
-│                    [VLESS Tunnel]                          │
-│              (XHTTP/TCP/WS/GRPC)                          │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Server B (Intermediate)                         │
+│                    Iran Server (Iran)                       │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │         Tunnel Port (Receives from A)                │   │
-│  └──────────────────────┬───────────────────────────────┘   │
-│                         │                                     │
-│              ┌──────────┴──────────┐                          │
-│              │                     │                          │
-│         ┌────▼────┐          ┌────▼────┐                    │
-│         │ Forward  │          │  Local  │                    │
-│         │  to C    │          │Services │                    │
-│         └──────────┘          └─────────┘                    │
-└─────────────────────────────────────────────────────────────┘
-                           │
-                           ▼ (Optional)
-┌─────────────────────────────────────────────────────────────┐
-│              Server C (Final Destination)                   │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │         Tunnel Port (Receives from B)                │   │
-│  └──────────────────────┬───────────────────────────────┘   │
-│                         │                                     │
-│                   ┌─────▼─────┐                              │
-│                   │   Local   │                              │
-│                   │  Services │                              │
-│                   └───────────┘                              │
+│  │         Paqet Client (udp-relay-tunnel1)             │   │
+│  │  ┌──────────────────────────────────────────────┐    │   │
+│  │  │         Tunnel Port (Receives from Kharej)     │    │   │
+│  │  └──────────────────────┬───────────────────────┘    │   │
+│  │                         │                             │   │
+│  │              ┌──────────┴──────────┐                  │   │
+│  │              │                     │                  │   │
+│  │         ┌────▼────┐          ┌────▼────┐            │   │
+│  │         │ Forward  │          │  Local  │            │   │
+│  │         │  to C     │          │Services │            │   │
+│  │         └──────────┘          └─────────┘            │   │
+│  └──────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Routing Modes
+### How It Works
 
-#### Direct Routing (A → B)
-```
-Client → Server A → Server B → Local Services
-```
-- **Use Case**: Simple two-server setup
-- **Advantage**: Lower latency, simpler configuration
-
-#### Multi-Hop Routing (A → B → C)
-```
-Client → Server A → Server B → Server C → Local Services
-```
-- **Use Case**: Extended routing, additional security layer
-- **Advantage**: Enhanced security, geographic distribution
-
----
-
-## 🌐 Transport Protocols
-
-### 1. XHTTP (SplitHTTP) with Reality ⭐ Recommended
-
-**Best for**: Maximum stealth and DPI bypass
-
-**Features:**
-- ✅ No real certificates required
-- ✅ Perfect forward secrecy
-- ✅ Chrome TLS fingerprinting
-- ✅ Multiple short IDs (20 unique)
-- ✅ Decoy destination (Microsoft)
-
-**Configuration:**
-```json
-{
-  "network": "splithttp",
-  "security": "reality",
-  "realitySettings": {
-    "serverName": "www.accounts.accesscontrol.windows.net",
-    "publicKey": "generated-x25519-public-key",
-    "shortIds": ["id1", "id2", "..."],
-    "fingerprint": "chrome"
-  },
-  "splithttpSettings": {
-    "path": "/assets",
-    "mode": "Paket-up",
-    "scMaxEachPostBytes": 2097152,
-    "scMaxConcurrentPosts": 4,
-    "scMinPostsIntervalMs": 50,
-    "xPaddingBytes": 0,
-    "keepaliveperiod": 120
-  }
-}
-```
-
-**Performance Settings:**
-- `scMaxEachPostBytes`: 2MB (reduced overhead)
-- `scMaxConcurrentPosts`: 4 (reduced CPU usage)
-- `scMinPostsIntervalMs`: 50ms (reduced CPU usage)
-- `xPaddingBytes`: 0 (reduced RAM usage)
-- `keepaliveperiod`: 120s (reduced connection overhead)
-- `mode`: Paket-up (optimal for SplitHTTP)
-
-### 2. TCP Raw
-
-**Best for**: Maximum speed and simplicity
-
-**Features:**
-- ✅ Fastest protocol
-- ✅ Lowest overhead
-- ✅ No encryption overhead
-- ✅ Simple configuration
-
-**Configuration:**
-```json
-{
-  "network": "tcp"
-}
-```
-
-**Use Cases:**
-- Internal networks
-- High-speed requirements
-- Low-latency applications
-
-### 3. WebSocket
-
-**Best for**: CDN integration and web proxies
-
-**Features:**
-- ✅ CDN compatible
-- ✅ Web firewall bypass
-- ✅ HTTP proxy support
-- ✅ Configurable path
-
-**Configuration:**
-```json
-{
-  "network": "ws",
-  "wsSettings": {
-    "path": "/assets"
-  }
-}
-```
-
-**Use Cases:**
-- Cloudflare/CDN integration
-- Web-based proxies
-- HTTP-only environments
-
-### 4. GRPC
-
-**Best for**: High performance and CDN
-
-**Features:**
-- ✅ CDN compatible
-- ✅ HTTP/2 multiplexing
-- ✅ High performance (up to 20% improvement with multiMode)
-- ✅ Configurable service name
-- ✅ Optimized with performance settings
-
-**Configuration (Server A - Outbound):**
-```json
-{
-  "network": "grpc",
-  "grpcSettings": {
-    "serviceName": "/xray.XrayService",
-    "multiMode": true,
-    "idle_timeout": 60,
-    "health_check_timeout": 20,
-    "permit_without_stream": false,
-    "initial_windows_size": 65535
-  }
-}
-```
-
-**Performance Settings:**
-- `multiMode`: Enables multi-mode for ~20% performance improvement
-- `idle_timeout`: 60 seconds - triggers health checks when idle
-- `health_check_timeout`: 20 seconds - timeout for health checks
-- `initial_windows_size`: 65535 - optimal window size for HTTP/2 streams
-
-**Use Cases:**
-- High-performance requirements
-- CDN integration
-- Modern applications
-- When maximum throughput is needed
+1. **Server Side (Kharej)**: Listens on specified ports, captures packets using raw sockets
+2. **KCP Transport**: Encrypts and transmits packets via KCP protocol over UDP
+3. **Client Side (Iran)**: Receives KCP packets, decrypts, and forwards to target addresses
+4. **Bidirectional**: Works in both directions simultaneously
 
 ---
 
@@ -368,199 +163,282 @@ Client → Server A → Server B → Server C → Local Services
 
 ### Step-by-Step Installation
 
-#### 1. Server B (Intermediate) Installation
+#### 1. Setup Foreign Server (Kharej)
 
 ```bash
-sudo bash install
-# Select: Server B
-# Choose transport protocol
-# Enter configuration details
+sudo bash paqet.sh
+# Select: Setup Foreign Server
+# Enter tunnel name, listen port
+# Choose user count profile (affects optimization)
+# Configure network settings
 ```
 
 **Required Information:**
-- UUID (from Server A)
-- Private Key (from Server A)
-- Transport Protocol (must match Server A)
-- Transport Path (if WebSocket/GRPC)
-- Short IDs (if XHTTP)
-- Server Name (if XHTTP)
-- Tunnel Port
-- Ports to forward
+- Tunnel name (e.g., `tunnel1`)
+- Listen port (e.g., `9999`)
+- Network interface
+- Router MAC address
+- Expected concurrent users (for auto-optimization)
+- Encryption key (auto-generated or custom)
 
-#### 2. Server A (Entry) Installation
+**Generated Information (Save for Client):**
+- Encryption key
+- Server IP address
+- Server port
+
+#### 2. Setup Iran Client
 
 ```bash
-sudo bash install
-# Select: Server A
-# Choose transport protocol
-# Enter Server B details
+sudo bash paqet.sh
+# Select: Setup Iran Client
+# Enter foreign server details
+# Enter encryption key
+# Configure target addresses
 ```
 
 **Required Information:**
-- Server B IP address
-- Tunnel Port
-- Transport Protocol
-- Transport Path (if WebSocket/GRPC)
-- Server Name (if XHTTP)
+- Foreign server IP address
+- Server port
+- Encryption key (from server setup)
+- Tunnel name
+- Target addresses (where to forward traffic)
+- Expected concurrent users (for auto-optimization)
 
-**Generated Information (Save for Server B):**
-- UUID
-- Public Key (for Server A)
-- Private Key (for Server B)
-- Short IDs (20 different)
-- Server Name
+### Installation Options
 
-#### 3. Server C (Optional - Final Destination)
+The script provides an interactive menu:
 
-```bash
-sudo bash install
-# Select: Server C
-# Enter B->C connection details
+```
+╔═══════════════════════════════════════════════════════════════╗
+║                    Paqet Manager                              ║
+╚═══════════════════════════════════════════════════════════════╝
+
+1) Setup Foreign Server (Kharej)
+2) Setup Iran Client
+3) Manage Configs
+4) Manage Services
+5) Manage Logs
+6) Find Optimal MTU
+7) Exit
 ```
 
 ---
 
 ## ⚙️ Configuration
 
-### SplitHTTP Optimization Settings
+### Configuration File Structure
 
-Optimized for high user counts and CPU/RAM efficiency:
+Paqet uses YAML configuration files located in `/etc/paqet/`:
 
-```json
-{
-  "splithttpSettings": {
-    "path": "/assets",
-    "mode": "Paket-up",
-    "scMaxEachPostBytes": 2097152,      // 2MB - Reduced overhead
-    "scMaxConcurrentPosts": 4,          // Reduced CPU usage
-    "scMinPostsIntervalMs": 50,         // Reduced CPU usage
-    "noSSEHeader": false,               // Appears legitimate
-    "noGRPCHeader": true,                // Reduces detection
-    "xPaddingBytes": 0,                 // Reduced RAM usage
-    "keepaliveperiod": 120              // Reduced connection overhead
-  }
-}
+```yaml
+# Server Configuration Example
+server:
+  ipv4:
+    addr: "192.168.1.1:9999"
+    router_mac: "aa:bb:cc:dd:ee:ff"
+  pcap:
+    sockbuf: 16777216
+  tcp:
+    local_flag: ["PA"]
+
+transport:
+  protocol: "kcp"
+  conn: 2
+  kcp:
+    mode: "fast2"
+    mtu: 1480
+    rcvwnd: 2048
+    sndwnd: 2048
+    block: "salsa20"
+    key: "your-encryption-key-here"
+    smuxbuf: 16777216
+    streambuf: 8388608
+
+forward:
+  - listen: "0.0.0.0:8080"
+    target: "127.0.0.1:8080"
+    protocol: "tcp"
 ```
 
-### BBR and TCP Optimization
+### Key Configuration Parameters
 
-Automatically configured during installation:
+#### KCP Settings
 
-```bash
-# Manual application
-sudo bash scripts/apply_bbr_tcp_optimization.sh
-```
+- **mode**: `normal`, `fast`, `fast2`, `fast3`
+  - `normal`: Balanced speed and latency
+  - `fast`: Faster, higher CPU usage
+  - `fast2`: Very fast, optimized for medium traffic
+  - `fast3`: Maximum speed, high CPU usage
 
-**Settings Applied:**
-- BBR congestion control
-- TCP buffers: 128MB max (read/write)
-- TCP window scaling
-- TCP Fast Open
-- Connection tracking: 1M max
-- Socket options optimized
-- MTU settings: Default 1350 for packet tunnel (prevents fragmentation)
+- **conn**: Number of parallel KCP connections (1-256)
+  - More connections = better throughput but higher CPU
 
-**Full Documentation:** [BBR_TCP_OPTIMIZATION.md](BBR_TCP_OPTIMIZATION.md)
+- **rcvwnd/sndwnd**: Receive/Send window sizes
+  - Larger windows = better throughput but more memory
+
+- **mtu**: Maximum Transmission Unit (default: 1480)
+  - Use MTU discovery tool to find optimal value
+
+#### Encryption Algorithms
+
+| Algorithm | Speed | Security | CPU Usage |
+|-----------|-------|----------|-----------|
+| **salsa20** ⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ |
+| **aes** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
+| **blowfish** | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ |
+| **cast5** | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ |
+| **sm4** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+
+**Default**: `salsa20` (best balance of speed and security)
+
+### Auto-Optimization Profiles
+
+The script automatically optimizes settings based on expected concurrent users:
+
+#### Under 50 Users
+- KCP Mode: `fast`
+- Connections: 1
+- Buffers: 8MB SMUX, 4MB Stream
+
+#### 50-100 Users
+- KCP Mode: `fast`
+- Connections: 1
+- Buffers: 12MB SMUX, 6MB Stream
+
+#### 100-300 Users
+- KCP Mode: `fast2`
+- Connections: 2
+- Buffers: 16MB SMUX, 8MB Stream
+
+#### Over 300 Users
+- KCP Mode: `fast3`
+- Connections: 4
+- Buffers: 64MB SMUX, 32MB Stream
 
 ---
 
 ## ⚡ Performance Optimizations
 
-### Xray v26.2.2 Improvements
+### Network Optimizations
 
-**Performance Enhancements:**
-- ✅ Reduced memory usage at startup (#5581)
-- ✅ Geodat optimization - Reduced peak memory
-- ✅ VMess replay filter optimization (#5562)
-- ✅ TUN inbound improvements - Fixed connection stalls (#5600)
-- ✅ Hysteria transport improvements (#5603)
-- ✅ XHTTP transport improvements - CDN bypass options (#5414)
-- ✅ MPH domain matcher improvements - Cache usage (#5505)
+#### BBR Congestion Control
 
-**New Features:**
-- 🆕 Finalmask - XICMP, XDNS, header-*, mkcp-*
-- 🆕 iOS support - Improved TUN inbound (#5612)
-- 🆕 Darwin improvements - Better macOS support (#5598)
+Automatically enabled during installation:
 
-**Full Documentation:** [XRAY_V26.2.2_FEATURES.md](XRAY_V26.2.2_FEATURES.md)
+```bash
+# Check BBR status
+sysctl net.ipv4.tcp_congestion_control
+# Should output: net.ipv4.tcp_congestion_control = bbr
+```
 
-### Recommended Settings for High User Counts
+#### Sysctl Optimizations (Optional)
 
-1. **SplitHTTP Mode**: `Paket-up` (optimal for SplitHTTP)
-2. **xPaddingBytes**: `0` (reduces RAM usage)
-3. **scMaxConcurrentPosts**: `4` (reduces CPU usage)
-4. **scMinPostsIntervalMs**: `50` (reduces CPU usage)
-5. **BBR**: Enabled by default
-6. **TCP Buffers**: Optimized for high bandwidth
+The script can optionally apply kernel parameter optimizations:
+
+- TCP buffer sizes
+- Connection tracking limits
+- TCP window scaling
+- Fast Open support
+
+**Note**: Sysctl optimizations are optional and require user confirmation.
+
+### MTU Optimization
+
+Use the built-in MTU discovery tool:
+
+```bash
+sudo bash paqet.sh
+# Select: Find Optimal MTU
+# Enter target IP
+# Enter test duration (default: 300 seconds)
+```
+
+The tool will:
+1. Rapidly test MTU range (1500 → 1200)
+2. Validate stability with zero packet loss tolerance
+3. Recommend optimal MTU and MSS
+
+**Default MTU**: 1480 (recommended for most networks)
 
 ---
 
 ## 🛠️ Management Tools
 
-### Port Management
+### Config Management
 
 ```bash
-# Add new port
-sudo bash scripts/manage_ports.sh add 8443
-
-# Remove port
-sudo bash scripts/manage_ports.sh remove 8080
-
-# List configured ports
-sudo bash scripts/manage_ports.sh list
+sudo bash paqet.sh
+# Select: Manage Configs
 ```
 
-### Configuration Backup
+Features:
+- List all configurations
+- View configuration details
+- Edit configurations
+- Delete configurations
+- Create new configurations
+
+### Service Management
 
 ```bash
-# Create backup
-sudo bash scripts/backup_config.sh create
-
-# List backups
-sudo bash scripts/backup_config.sh list
-
-# Restore from backup
-sudo bash scripts/backup_config.sh restore backup_20231201_120000
-
-# Clean old backups
-sudo bash scripts/backup_config.sh clean
+sudo bash paqet.sh
+# Select: Manage Services
 ```
 
-### Status Monitoring
+Features:
+- List all services (`udp-relay-*`)
+- Start/Stop services
+- Restart services
+- Enable/Disable services
+- View service status
+- View service logs
+
+### Log Management
 
 ```bash
-# Detailed status report
-sudo bash scripts/status.sh status
-
-# Quick status check
-sudo bash scripts/status.sh quick
-
-# Check specific components
-sudo bash scripts/status.sh services
-sudo bash scripts/status.sh ports
-sudo bash scripts/status.sh configs
-sudo bash scripts/status.sh logs
-sudo bash scripts/status.sh resources
-sudo bash scripts/status.sh connectivity
+sudo bash paqet.sh
+# Select: Manage Logs
 ```
 
-### Troubleshooting Tools
+Features:
+- List all configs with current log levels
+- Change log level per config or all configs
+- Log levels: `none`, `debug`, `info`, `warn`, `error`, `fatal`
+
+### MTU Discovery
 
 ```bash
-# Comprehensive troubleshooting
-sudo bash scripts/troubleshoot.sh
+sudo bash paqet.sh
+# Select: Find Optimal MTU
+```
 
-# Quick fix for common issues
-sudo bash scripts/quick_fix.sh
+Features:
+- Rapid initial discovery (1500 → 1200)
+- Stability validation (user-defined duration)
+- Zero packet loss tolerance
+- Automatic MTU reduction on failure
+- MSS calculation
 
-# Resolve Xray conflicts
-sudo bash scripts/resolve_xray_conflict.sh
+### Manual Service Commands
 
-# Validate and fix configuration
-sudo bash scripts/validate_and_fix_config.sh
+```bash
+# Start service
+sudo systemctl start udp-relay-tunnel1
 
-# Fix B->C connection keys
-sudo bash scripts/fix_b_to_c_keys.sh
+# Stop service
+sudo systemctl stop udp-relay-tunnel1
+
+# Restart service
+sudo systemctl restart udp-relay-tunnel1
+
+# Enable on boot
+sudo systemctl enable udp-relay-tunnel1
+
+# View status
+sudo systemctl status udp-relay-tunnel1
+
+# View logs
+sudo journalctl -u udp-relay-tunnel1 -f
 ```
 
 ---
@@ -573,146 +451,157 @@ sudo bash scripts/fix_b_to_c_keys.sh
 
 ```bash
 # Check service status
-systemctl status xray-a
-systemctl status xray-b
+systemctl status udp-relay-tunnel1
 
 # Check logs
-journalctl -u xray-a -f
-journalctl -u xray-b -f
+journalctl -u udp-relay-tunnel1 -f
 
 # Verify configuration
-xray -test -config /etc/xray/a.json
-xray -test -config /etc/xray/b.json
+paqet run -c /etc/paqet/tunnel1.yaml --dry-run
 ```
 
-#### 2. Connection Issues
+#### 2. "No buffer space available" Error
 
-**Check UUID Match:**
+This indicates buffer overflow. Solutions:
+
+- Increase KCP buffers (`smuxbuf`, `streambuf`)
+- Increase socket buffers (`pcap.sockbuf`)
+- Reduce KCP window sizes (`rcvwnd`, `sndwnd`)
+- Use auto-optimization with correct user count
+
+#### 3. Connection Issues
+
+**Check Encryption Key Match:**
 ```bash
-# Server A
-jq '.outbounds[0].settings.vnext[0].users[0].id' /etc/xray/a.json
+# Server
+grep "key:" /etc/paqet/tunnel1-server.yaml
 
-# Server B
-jq '.inbounds[0].settings.clients[0].id' /etc/xray/b.json
+# Client
+grep "key:" /etc/paqet/tunnel1-client.yaml
 ```
 
-**Check Transport Protocol Match:**
+**Check Port Accessibility:**
 ```bash
-# Server A
-jq '.outbounds[0].streamSettings.network' /etc/xray/a.json
+# On server
+ss -ulnp | grep 9999
 
-# Server B
-jq '.inbounds[0].streamSettings.network' /etc/xray/b.json
+# Test connectivity
+nc -u server-ip 9999
 ```
 
-#### 3. Port Conflicts
+#### 4. High Packet Loss
 
-```bash
-# Check listening ports
-ss -tlnp | grep -E ':(80|443|8080|8443|8081)\s'
-
-# Check service conflicts
-systemctl list-units | grep -E '(xray|nginx|apache)'
-```
-
-#### 4. Firewall Issues
-
-```bash
-# Check UFW status
-sudo ufw status
-
-# Check iptables rules
-sudo iptables -L -n -v
-
-# Allow required ports
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-sudo ufw allow 8080/tcp
-sudo ufw allow 8443/tcp
-sudo ufw allow 8081/tcp
-```
+- Use MTU discovery tool to find optimal MTU
+- Reduce MTU value in configuration
+- Check network quality
+- Verify iptables rules (NOTRACK rules)
 
 #### 5. Performance Issues
 
+**Check KCP Mode:**
 ```bash
-# Check BBR status
-sysctl net.ipv4.tcp_congestion_control
-
-# Check TCP buffers
-sysctl net.core.rmem_max
-sysctl net.core.wmem_max
-
-# Apply optimizations manually
-sudo bash scripts/apply_bbr_tcp_optimization.sh
+grep "mode:" /etc/paqet/tunnel1.yaml
 ```
+
+**Check Buffer Sizes:**
+```bash
+grep -E "(smuxbuf|streambuf|sockbuf)" /etc/paqet/tunnel1.yaml
+```
+
+**Apply Optimizations:**
+- Use auto-optimization based on actual user count
+- Enable BBR if not already enabled
+- Consider sysctl optimizations for high traffic
 
 ### Log Analysis
 
 ```bash
-# Xray access logs
-tail -f /var/log/xray/access.log
+# View service logs
+journalctl -u udp-relay-tunnel1 -f
 
-# Xray error logs
-tail -f /var/log/xray/error.log
+# View with log level
+journalctl -u udp-relay-tunnel1 -f --priority=info
 
-# System logs
-journalctl -u xray-a -f
-journalctl -u xray-b -f
-
-# System messages
-dmesg | grep -i xray
+# View errors only
+journalctl -u udp-relay-tunnel1 -f --priority=err
 ```
 
----
+### iptables Rules
 
-## 📚 Documentation
-
-### Main Documentation
-
-- **[README.md](README.md)** - This file (English)
-- **[README_FA.md](README_FA.md)** - Persian documentation
-- **[XRAY_V26.2.2_FEATURES.md](XRAY_V26.2.2_FEATURES.md)** - v26.2.2 features and improvements
-- **[BBR_TCP_OPTIMIZATION.md](BBR_TCP_OPTIMIZATION.md)** - BBR and TCP optimization guide
-- **[CONFIGURATION_EXAMPLES.md](CONFIGURATION_EXAMPLES.md)** - Configuration examples
-- **[PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)** - Detailed project overview
-
-### External Resources
-
-- [Xray-core Documentation](https://xtls.github.io/)
-- [Xray-core GitHub](https://github.com/XTLS/Xray-core)
-- [Xray-core Releases](https://github.com/XTLS/Xray-core/releases)
-
----
-
-## 🧪 Testing
-
-### Health Checks
+Paqet requires specific iptables rules to prevent kernel interference:
 
 ```bash
-# Check listening ports
-ss -tlnp | grep -E ':(80|443|8080|8443|8081)\s'
-
-# Check service status
-systemctl is-active xray-a xray-b
-
-# Test connectivity
-curl -I http://server-a-ip:80
-curl -I http://server-a-ip:443
+# These are automatically applied during installation
+iptables -t raw -A PREROUTING -p tcp --dport 9999 -j NOTRACK
+iptables -t raw -A OUTPUT -p tcp --sport 9999 -j NOTRACK
+iptables -t mangle -A OUTPUT -p tcp --sport 9999 --tcp-flags RST RST -j DROP
 ```
 
-### End-to-End Testing
+**Verify rules:**
+```bash
+iptables -t raw -L -n -v
+iptables -t mangle -L -n -v
+```
 
-1. **Start test service on Server B:**
-   ```bash
-   sudo nc -l 127.0.0.1 8080
-   ```
+---
 
-2. **Connect from client to Server A:**
-   ```bash
-   nc server-a-ip 8080
-   ```
+## 📚 Advanced Configuration
 
-3. **Type messages** - They should appear in Server B's nc session.
+### Custom KCP Settings
+
+Edit configuration file directly:
+
+```bash
+sudo nano /etc/paqet/tunnel1.yaml
+```
+
+Modify KCP section:
+
+```yaml
+transport:
+  protocol: "kcp"
+  conn: 4                    # Increase for more throughput
+  kcp:
+    mode: "fast3"            # Maximum speed
+    mtu: 1480                # Use MTU discovery result
+    rcvwnd: 8192             # Large receive window
+    sndwnd: 8192             # Large send window
+    block: "salsa20"         # Encryption algorithm
+    key: "your-key"
+    smuxbuf: 67108864        # 64MB SMUX buffer
+    streambuf: 33554432      # 32MB stream buffer
+```
+
+### Multiple Tunnels
+
+You can create multiple tunnels with different names:
+
+```bash
+sudo bash paqet.sh
+# Select: Setup Foreign Server
+# Enter different tunnel name: tunnel2
+# Configure different port: 8888
+```
+
+Each tunnel runs as a separate service: `udp-relay-tunnel1`, `udp-relay-tunnel2`, etc.
+
+### Client Package Generation
+
+Generate ready-to-install client packages:
+
+```bash
+# During server setup, choose "Yes" when asked about client package
+# Or manually:
+sudo bash paqet.sh
+# Select: Setup Foreign Server
+# After configuration, choose to create client package
+```
+
+The package includes:
+- Paqet binary
+- Auto-install script
+- Pre-configured settings
+- Network optimization tools
 
 ---
 
@@ -759,18 +648,18 @@ The authors and contributors are not responsible for any misuse of this software
 ### Getting Help
 
 - **GitHub Issues**: [Open an issue](https://github.com/letmefind/Easy-paqet/issues)
-- **Documentation**: Check the [documentation](#-documentation) section
-- **Troubleshooting**: Use the [troubleshooting tools](#-troubleshooting)
+- **Documentation**: Check this README and inline script help
 
 ### Reporting Issues
 
 When reporting issues, please include:
 
-- Xray version (`xray version`)
+- Paqet version (`paqet version`)
 - Operating system and version
 - Installation method
 - Error messages and logs
 - Steps to reproduce
+- Configuration file (with sensitive data removed)
 
 ---
 
@@ -778,6 +667,6 @@ When reporting issues, please include:
 
 **Made with ❤️ for communication freedom**
 
-[⬆ Back to top](#-stealth-multiplex-tunnel-xray)
+[⬆ Back to top](#-paqet-tunnel-manager)
 
 </div>
