@@ -42,6 +42,7 @@ MSG_FA[setup_client]="راه‌اندازی کلاینت ایران"
 MSG_FA[manage_configs]="مدیریت کانفیگ‌ها"
 MSG_FA[manage_services]="مدیریت سرویس‌ها"
 MSG_FA[manage_logs]="مدیریت لاگ‌ها"
+MSG_FA[check_buffers]="بررسی وضعیت Buffer"
 MSG_FA[mtu_discovery]="یافتن MTU بهینه"
 MSG_FA[exit]="خروج"
 MSG_FA[paqet_installed]="Paqet نصب شده است"
@@ -62,6 +63,7 @@ MSG_EN[setup_client]="Setup Iran Client"
 MSG_EN[manage_configs]="Manage Configs"
 MSG_EN[manage_services]="Manage Services"
 MSG_EN[manage_logs]="Manage Logs"
+MSG_EN[check_buffers]="Check Buffer Status"
 MSG_EN[mtu_discovery]="Find Optimal MTU"
 MSG_EN[exit]="Exit"
 MSG_EN[paqet_installed]="Paqet is installed"
@@ -767,6 +769,7 @@ create_client_package() {
     local SERVER_IP="$2"
     local SERVER_PORT="$3"
     local SECRET_KEY="$4"
+    local MTU_VALUE="${5:-1350}"
     
     print_separator
     echo ""
@@ -804,6 +807,7 @@ SERVER_IP=$SERVER_IP
 SERVER_PORT=$SERVER_PORT
 TUNNEL_NAME=$TUNNEL_NAME
 SECRET_KEY=$SECRET_KEY
+MTU=$MTU_VALUE
 LANG=$LANG_SELECTED
 EOF
     chmod 600 "$PACKAGE_PATH/server_info.txt"
@@ -1099,6 +1103,9 @@ if [ ! -f "$SCRIPT_DIR/server_info.txt" ]; then
 fi
 
 source "$SCRIPT_DIR/server_info.txt"
+
+# مقداردهی اولیه MTU در صورت عدم وجود
+MTU=${MTU:-1350}
 
 # نصب prerequisites
 if [ "$LANG_SELECTED" == "en" ]; then
@@ -1399,7 +1406,7 @@ transport:
   conn: $KCP_CONN
   kcp:
     mode: "$KCP_MODE"
-    mtu: 1350$(if [ -n "$KCP_RCVWND" ]; then echo -e "\n    rcvwnd: $KCP_RCVWND"; fi)$(if [ -n "$KCP_SNDWND" ]; then echo -e "\n    sndwnd: $KCP_SNDWND"; fi)
+    mtu: $MTU$(if [ -n "$KCP_RCVWND" ]; then echo -e "\n    rcvwnd: $KCP_RCVWND"; fi)$(if [ -n "$KCP_SNDWND" ]; then echo -e "\n    sndwnd: $KCP_SNDWND"; fi)
     block: "salsa20"
     key: "$SECRET_KEY"$(if [ -n "$KCP_SMUXBUF" ]; then echo -e "\n    smuxbuf: $KCP_SMUXBUF"; fi)$(if [ -n "$KCP_STREAMBUF" ]; then echo -e "\n    streambuf: $KCP_STREAMBUF"; fi)
 EOF
@@ -1747,6 +1754,31 @@ setup_server() {
     fi
     echo ""
     
+    # سوال MTU
+    echo ""
+    if [ "$LANG_SELECTED" == "en" ]; then
+        echo "MTU (Maximum Transmission Unit):"
+        echo "  Recommended: 1350 (default for most networks)"
+        echo "  Range: 1200-1500"
+        read -p "Enter MTU [1350]: " MTU_INPUT
+    else
+        echo "MTU (حداکثر واحد انتقال):"
+        echo "  توصیه شده: 1350 (پیش‌فرض برای اکثر شبکه‌ها)"
+        echo "  محدوده: 1200-1500"
+        read -p "MTU را وارد کنید [1350]: " MTU_INPUT
+    fi
+    MTU=${MTU_INPUT:-1350}
+    
+    # اعتبارسنجی MTU
+    if ! [[ "$MTU" =~ ^[0-9]+$ ]] || [ "$MTU" -lt 1200 ] || [ "$MTU" -gt 1500 ]; then
+        if [ "$LANG_SELECTED" == "en" ]; then
+            print_warning "Invalid MTU. Using default: 1350"
+        else
+            print_warning "MTU نامعتبر. استفاده از پیش‌فرض: 1350"
+        fi
+        MTU=1350
+    fi
+    
     # تولید کلید
     SECRET_KEY=$(openssl rand -base64 32 2>/dev/null || echo "AY9Frl1VHWJB01lmKqLgE6dJllLhF3Sn4Lw/6BrcyYY=")
     
@@ -1782,7 +1814,7 @@ transport:
   conn: $KCP_CONN
   kcp:
     mode: "$KCP_MODE"
-    mtu: 1350$(if [ -n "$KCP_RCVWND" ]; then echo -e "\n    rcvwnd: $KCP_RCVWND"; fi)$(if [ -n "$KCP_SNDWND" ]; then echo -e "\n    sndwnd: $KCP_SNDWND"; fi)
+    mtu: $MTU$(if [ -n "$KCP_RCVWND" ]; then echo -e "\n    rcvwnd: $KCP_RCVWND"; fi)$(if [ -n "$KCP_SNDWND" ]; then echo -e "\n    sndwnd: $KCP_SNDWND"; fi)
     block: "salsa20"
     key: "$SECRET_KEY"$(if [ -n "$KCP_SMUXBUF" ]; then echo -e "\n    smuxbuf: $KCP_SMUXBUF"; fi)$(if [ -n "$KCP_STREAMBUF" ]; then echo -e "\n    streambuf: $KCP_STREAMBUF"; fi)
 EOF
@@ -1863,7 +1895,7 @@ EOF
         read -p "آیا می‌خواهید پکیج برای کلاینت ایران بسازید؟ [Y/n]: " CREATE_PACKAGE
     fi
     if [[ ! "$CREATE_PACKAGE" =~ ^[Nn]$ ]]; then
-        create_client_package "$TUNNEL_NAME" "$LOCAL_IP" "$LISTEN_PORT" "$SECRET_KEY"
+        create_client_package "$TUNNEL_NAME" "$LOCAL_IP" "$LISTEN_PORT" "$SECRET_KEY" "$MTU"
     fi
     
     # شروع سرویس
@@ -2099,6 +2131,31 @@ setup_client() {
     fi
     echo ""
     
+    # سوال MTU
+    echo ""
+    if [ "$LANG_SELECTED" == "en" ]; then
+        echo "MTU (Maximum Transmission Unit):"
+        echo "  Recommended: 1350 (default for most networks)"
+        echo "  Range: 1200-1500"
+        read -p "Enter MTU [1350]: " MTU_INPUT
+    else
+        echo "MTU (حداکثر واحد انتقال):"
+        echo "  توصیه شده: 1350 (پیش‌فرض برای اکثر شبکه‌ها)"
+        echo "  محدوده: 1200-1500"
+        read -p "MTU را وارد کنید [1350]: " MTU_INPUT
+    fi
+    MTU=${MTU_INPUT:-1350}
+    
+    # اعتبارسنجی MTU
+    if ! [[ "$MTU" =~ ^[0-9]+$ ]] || [ "$MTU" -lt 1200 ] || [ "$MTU" -gt 1500 ]; then
+        if [ "$LANG_SELECTED" == "en" ]; then
+            print_warning "Invalid MTU. Using default: 1350"
+        else
+            print_warning "MTU نامعتبر. استفاده از پیش‌فرض: 1350"
+        fi
+        MTU=1350
+    fi
+    
     # نوع استفاده
     echo ""
     if [ "$LANG_SELECTED" == "en" ]; then
@@ -2207,7 +2264,7 @@ transport:
   conn: $KCP_CONN
   kcp:
     mode: "$KCP_MODE"
-    mtu: 1350$(if [ -n "$KCP_RCVWND" ]; then echo -e "\n    rcvwnd: $KCP_RCVWND"; fi)$(if [ -n "$KCP_SNDWND" ]; then echo -e "\n    sndwnd: $KCP_SNDWND"; fi)
+    mtu: $MTU$(if [ -n "$KCP_RCVWND" ]; then echo -e "\n    rcvwnd: $KCP_RCVWND"; fi)$(if [ -n "$KCP_SNDWND" ]; then echo -e "\n    sndwnd: $KCP_SNDWND"; fi)
     block: "salsa20"
     key: "$SECRET_KEY"$(if [ -n "$KCP_SMUXBUF" ]; then echo -e "\n    smuxbuf: $KCP_SMUXBUF"; fi)$(if [ -n "$KCP_STREAMBUF" ]; then echo -e "\n    streambuf: $KCP_STREAMBUF"; fi)
 EOF
@@ -2797,6 +2854,228 @@ manage_logs() {
     else
         echo "توجه: برای اعمال تغییرات، سرویس را restart کنید:"
         echo "  sudo systemctl restart <service-name>"
+    fi
+    
+    echo ""
+    if [ "$LANG_SELECTED" == "en" ]; then
+        read -p "Press Enter to continue..." < /dev/tty
+    else
+        read -p "برای ادامه Enter را فشار دهید..." < /dev/tty
+    fi
+}
+
+# Buffer Status Check Function - تابع بررسی وضعیت Buffer
+check_buffers() {
+    print_header
+    print_separator
+    if [ "$LANG_SELECTED" == "en" ]; then
+        echo -e "${BOLD}📊 Buffer Status Check${NC}"
+    else
+        echo -e "${BOLD}📊 بررسی وضعیت Buffer${NC}"
+    fi
+    print_separator
+    echo ""
+    
+    # 1. System Buffer Settings (sysctl)
+    if [ "$LANG_SELECTED" == "en" ]; then
+        echo -e "${BOLD}1. System Buffer Settings (sysctl):${NC}"
+    else
+        echo -e "${BOLD}1. تنظیمات Buffer سیستم (sysctl):${NC}"
+    fi
+    echo ""
+    
+    # Check rmem_max/wmem_max
+    RMAX=$(sysctl -n net.core.rmem_max 2>/dev/null || echo "N/A")
+    WMAX=$(sysctl -n net.core.wmem_max 2>/dev/null || echo "N/A")
+    RDEF=$(sysctl -n net.core.rmem_default 2>/dev/null || echo "N/A")
+    WDEF=$(sysctl -n net.core.wmem_default 2>/dev/null || echo "N/A")
+    
+    if [ "$LANG_SELECTED" == "en" ]; then
+        echo -e "  ${CYAN}Receive Buffers:${NC}"
+        echo -e "    rmem_max:     ${GREEN}$(numfmt --to=iec-i --suffix=B $RMAX 2>/dev/null || echo $RMAX)${NC}"
+        echo -e "    rmem_default: ${GREEN}$(numfmt --to=iec-i --suffix=B $RDEF 2>/dev/null || echo $RDEF)${NC}"
+        echo -e "  ${CYAN}Send Buffers:${NC}"
+        echo -e "    wmem_max:     ${GREEN}$(numfmt --to=iec-i --suffix=B $WMAX 2>/dev/null || echo $WMAX)${NC}"
+        echo -e "    wmem_default: ${GREEN}$(numfmt --to=iec-i --suffix=B $WDEF 2>/dev/null || echo $WDEF)${NC}"
+    else
+        echo -e "  ${CYAN}بافرهای دریافت:${NC}"
+        echo -e "    rmem_max:     ${GREEN}$(numfmt --to=iec-i --suffix=B $RMAX 2>/dev/null || echo $RMAX)${NC}"
+        echo -e "    rmem_default: ${GREEN}$(numfmt --to=iec-i --suffix=B $RDEF 2>/dev/null || echo $RDEF)${NC}"
+        echo -e "  ${CYAN}بافرهای ارسال:${NC}"
+        echo -e "    wmem_max:     ${GREEN}$(numfmt --to=iec-i --suffix=B $WMAX 2>/dev/null || echo $WMAX)${NC}"
+        echo -e "    wmem_default: ${GREEN}$(numfmt --to=iec-i --suffix=B $WDEF 2>/dev/null || echo $WDEF)${NC}"
+    fi
+    echo ""
+    
+    # Check TCP buffers
+    TCP_RMEM=$(sysctl -n net.ipv4.tcp_rmem 2>/dev/null || echo "N/A")
+    TCP_WMEM=$(sysctl -n net.ipv4.tcp_wmem 2>/dev/null || echo "N/A")
+    TCP_MEM=$(sysctl -n net.ipv4.tcp_mem 2>/dev/null || echo "N/A")
+    
+    if [ "$LANG_SELECTED" == "en" ]; then
+        echo -e "  ${CYAN}TCP Buffers:${NC}"
+        echo -e "    tcp_rmem: ${GREEN}$TCP_RMEM${NC} (min default max)"
+        echo -e "    tcp_wmem: ${GREEN}$TCP_WMEM${NC} (min default max)"
+        echo -e "    tcp_mem:  ${GREEN}$TCP_MEM${NC} (min pressure max)"
+    else
+        echo -e "  ${CYAN}بافرهای TCP:${NC}"
+        echo -e "    tcp_rmem: ${GREEN}$TCP_RMEM${NC} (حداقل پیش‌فرض حداکثر)"
+        echo -e "    tcp_wmem: ${GREEN}$TCP_WMEM${NC} (حداقل پیش‌فرض حداکثر)"
+        echo -e "    tcp_mem:  ${GREEN}$TCP_MEM${NC} (حداقل فشار حداکثر)"
+    fi
+    echo ""
+    
+    # 2. Paqet Config Buffer Settings
+    if [ "$LANG_SELECTED" == "en" ]; then
+        echo -e "${BOLD}2. Paqet Configuration Buffer Settings:${NC}"
+    else
+        echo -e "${BOLD}2. تنظیمات Buffer در کانفیگ‌های Paqet:${NC}"
+    fi
+    echo ""
+    
+    if [ ! -d "$CONFIG_DIR" ] || [ -z "$(ls -A $CONFIG_DIR/*.yaml 2>/dev/null)" ]; then
+        if [ "$LANG_SELECTED" == "en" ]; then
+            print_warning "No Paqet configs found"
+        else
+            print_warning "هیچ کانفیگ Paqet پیدا نشد"
+        fi
+    else
+        CONFIGS=$(ls -1 "$CONFIG_DIR"/*.yaml 2>/dev/null)
+        for CONFIG in $CONFIGS; do
+            CONFIG_NAME=$(basename "$CONFIG")
+            ROLE=$(grep "^role:" "$CONFIG" 2>/dev/null | awk '{print $2}' | tr -d '"' || echo "unknown")
+            
+            echo -e "  ${BOLD}$CONFIG_NAME${NC} (${ROLE}):"
+            
+            # Extract buffer settings
+            PCAP_SOCKBUF=$(grep -A1 "^pcap:" "$CONFIG" 2>/dev/null | grep "sockbuf:" | awk '{print $2}' || echo "not set")
+            KCP_RCVWND=$(grep -A1 "^kcp:" "$CONFIG" 2>/dev/null | grep "rcvwnd:" | awk '{print $2}' || echo "not set")
+            KCP_SNDWND=$(grep -A1 "^kcp:" "$CONFIG" 2>/dev/null | grep "sndwnd:" | awk '{print $2}' || echo "not set")
+            SMUXBUF=$(grep -A5 "^kcp:" "$CONFIG" 2>/dev/null | grep "smuxbuf:" | awk '{print $2}' || echo "not set")
+            STREAMBUF=$(grep -A5 "^kcp:" "$CONFIG" 2>/dev/null | grep "streambuf:" | awk '{print $2}' || echo "not set")
+            
+            # Also check for commented lines
+            if [ "$SMUXBUF" = "not set" ]; then
+                SMUXBUF=$(grep "^# smuxbuf:" "$CONFIG" 2>/dev/null | awk '{print $3}' || echo "not set")
+            fi
+            if [ "$STREAMBUF" = "not set" ]; then
+                STREAMBUF=$(grep "^# streambuf:" "$CONFIG" 2>/dev/null | awk '{print $3}' || echo "not set")
+            fi
+            
+            if [ "$LANG_SELECTED" == "en" ]; then
+                echo -e "    PCAP sockbuf: ${GREEN}$(if [ "$PCAP_SOCKBUF" != "not set" ]; then numfmt --to=iec-i --suffix=B $PCAP_SOCKBUF 2>/dev/null || echo $PCAP_SOCKBUF; else echo "not set (using default)"; fi)${NC}"
+                echo -e "    KCP rcvwnd:   ${GREEN}$(if [ "$KCP_RCVWND" != "not set" ]; then echo $KCP_RCVWND; else echo "not set (using default)"; fi)${NC}"
+                echo -e "    KCP sndwnd:   ${GREEN}$(if [ "$KCP_SNDWND" != "not set" ]; then echo $KCP_SNDWND; else echo "not set (using default)"; fi)${NC}"
+                echo -e "    SMUX buf:     ${GREEN}$(if [ "$SMUXBUF" != "not set" ]; then numfmt --to=iec-i --suffix=B $SMUXBUF 2>/dev/null || echo $SMUXBUF; else echo "not set (using default)"; fi)${NC}"
+                echo -e "    Stream buf:   ${GREEN}$(if [ "$STREAMBUF" != "not set" ]; then numfmt --to=iec-i --suffix=B $STREAMBUF 2>/dev/null || echo $STREAMBUF; else echo "not set (using default)"; fi)${NC}"
+            else
+                echo -e "    PCAP sockbuf: ${GREEN}$(if [ "$PCAP_SOCKBUF" != "not set" ]; then numfmt --to=iec-i --suffix=B $PCAP_SOCKBUF 2>/dev/null || echo $PCAP_SOCKBUF; else echo "تنظیم نشده (پیش‌فرض)"; fi)${NC}"
+                echo -e "    KCP rcvwnd:   ${GREEN}$(if [ "$KCP_RCVWND" != "not set" ]; then echo $KCP_RCVWND; else echo "تنظیم نشده (پیش‌فرض)"; fi)${NC}"
+                echo -e "    KCP sndwnd:   ${GREEN}$(if [ "$KCP_SNDWND" != "not set" ]; then echo $KCP_SNDWND; else echo "تنظیم نشده (پیش‌فرض)"; fi)${NC}"
+                echo -e "    SMUX buf:     ${GREEN}$(if [ "$SMUXBUF" != "not set" ]; then numfmt --to=iec-i --suffix=B $SMUXBUF 2>/dev/null || echo $SMUXBUF; else echo "تنظیم نشده (پیش‌فرض)"; fi)${NC}"
+                echo -e "    Stream buf:   ${GREEN}$(if [ "$STREAMBUF" != "not set" ]; then numfmt --to=iec-i --suffix=B $STREAMBUF 2>/dev/null || echo $STREAMBUF; else echo "تنظیم نشده (پیش‌فرض)"; fi)${NC}"
+            fi
+            echo ""
+        done
+    fi
+    
+    # 3. Check for Buffer Errors in Logs
+    if [ "$LANG_SELECTED" == "en" ]; then
+        echo -e "${BOLD}3. Recent Buffer Errors in Logs:${NC}"
+    else
+        echo -e "${BOLD}3. خطاهای Buffer اخیر در لاگ‌ها:${NC}"
+    fi
+    echo ""
+    
+    # Find all Paqet services
+    SERVICES=$(systemctl list-units --type=service --no-legend 2>/dev/null | grep "udp-relay-" | awk '{print $1}' || echo "")
+    
+    if [ -z "$SERVICES" ]; then
+        if [ "$LANG_SELECTED" == "en" ]; then
+            print_warning "No Paqet services found"
+        else
+            print_warning "هیچ سرویس Paqet پیدا نشد"
+        fi
+    else
+        BUFFER_ERRORS_FOUND=0
+        for SERVICE in $SERVICES; do
+            # Check for "No buffer space available" errors in last 100 lines
+            ERRORS=$(journalctl -u "$SERVICE" --no-pager -n 100 2>/dev/null | grep -i "buffer space\|buffer.*full\|buffer.*overflow" || echo "")
+            if [ -n "$ERRORS" ]; then
+                BUFFER_ERRORS_FOUND=1
+                echo -e "  ${RED}✗${NC} ${BOLD}$SERVICE${NC}:"
+                echo "$ERRORS" | head -5 | sed 's/^/    /'
+                if [ $(echo "$ERRORS" | wc -l) -gt 5 ]; then
+                    if [ "$LANG_SELECTED" == "en" ]; then
+                        echo -e "    ${YELLOW}... and more (use 'journalctl -u $SERVICE -f' to see all)${NC}"
+                    else
+                        echo -e "    ${YELLOW}... و بیشتر (از 'journalctl -u $SERVICE -f' برای دیدن همه استفاده کنید)${NC}"
+                    fi
+                fi
+                echo ""
+            fi
+        done
+        
+        if [ "$BUFFER_ERRORS_FOUND" -eq 0 ]; then
+            if [ "$LANG_SELECTED" == "en" ]; then
+                echo -e "  ${CHECK} ${GREEN}No buffer errors found in recent logs${NC}"
+            else
+                echo -e "  ${CHECK} ${GREEN}هیچ خطای بافری در لاگ‌های اخیر پیدا نشد${NC}"
+            fi
+        fi
+    fi
+    echo ""
+    
+    # 4. Recommendations
+    if [ "$LANG_SELECTED" == "en" ]; then
+        echo -e "${BOLD}4. Recommendations:${NC}"
+    else
+        echo -e "${BOLD}4. توصیه‌ها:${NC}"
+    fi
+    echo ""
+    
+    # Check if buffers are too small
+    RMAX_NUM=$(echo "$RMAX" | grep -oE '[0-9]+' | head -1)
+    WMAX_NUM=$(echo "$WMAX" | grep -oE '[0-9]+' | head -1)
+    
+    if [ -n "$RMAX_NUM" ] && [ "$RMAX_NUM" -lt 26214400 ]; then
+        if [ "$LANG_SELECTED" == "en" ]; then
+            echo -e "  ${WARN} ${YELLOW}rmem_max ($(numfmt --to=iec-i --suffix=B $RMAX_NUM 2>/dev/null || echo $RMAX_NUM)) is low. Consider increasing to at least 25MB for high traffic.${NC}"
+        else
+            echo -e "  ${WARN} ${YELLOW}rmem_max ($(numfmt --to=iec-i --suffix=B $RMAX_NUM 2>/dev/null || echo $RMAX_NUM)) پایین است. برای ترافیک بالا حداقل 25MB توصیه می‌شود.${NC}"
+        fi
+    fi
+    
+    if [ -n "$WMAX_NUM" ] && [ "$WMAX_NUM" -lt 26214400 ]; then
+        if [ "$LANG_SELECTED" == "en" ]; then
+            echo -e "  ${WARN} ${YELLOW}wmem_max ($(numfmt --to=iec-i --suffix=B $WMAX_NUM 2>/dev/null || echo $WMAX_NUM)) is low. Consider increasing to at least 25MB for high traffic.${NC}"
+        else
+            echo -e "  ${WARN} ${YELLOW}wmem_max ($(numfmt --to=iec-i --suffix=B $WMAX_NUM 2>/dev/null || echo $WMAX_NUM)) پایین است. برای ترافیک بالا حداقل 25MB توصیه می‌شود.${NC}"
+        fi
+    fi
+    
+    if [ "$BUFFER_ERRORS_FOUND" -eq 1 ]; then
+        if [ "$LANG_SELECTED" == "en" ]; then
+            echo -e "  ${WARN} ${YELLOW}Buffer errors detected! Consider:${NC}"
+            echo -e "    - Increasing PCAP sockbuf in config"
+            echo -e "    - Increasing SMUX/Stream buffers"
+            echo -e "    - Reducing KCP window sizes (rcvwnd/sndwnd)"
+            echo -e "    - Using auto-optimization based on user count"
+            echo -e "    - Reducing KCP conn value for fast3 mode"
+        else
+            echo -e "  ${WARN} ${YELLOW}خطاهای بافر شناسایی شد! در نظر بگیرید:${NC}"
+            echo -e "    - افزایش PCAP sockbuf در کانفیگ"
+            echo -e "    - افزایش بافرهای SMUX/Stream"
+            echo -e "    - کاهش اندازه پنجره‌های KCP (rcvwnd/sndwnd)"
+            echo -e "    - استفاده از بهینه‌سازی خودکار بر اساس تعداد کاربر"
+            echo -e "    - کاهش مقدار conn برای حالت fast3"
+        fi
+    else
+        if [ "$LANG_SELECTED" == "en" ]; then
+            echo -e "  ${CHECK} ${GREEN}Buffer settings appear optimal${NC}"
+        else
+            echo -e "  ${CHECK} ${GREEN}تنظیمات بافر بهینه به نظر می‌رسد${NC}"
+        fi
     fi
     
     echo ""
@@ -3463,13 +3742,14 @@ show_main_menu() {
     echo -e "  ${CYAN}3${NC}) ${BOLD}$(t manage_configs)${NC}"
     echo -e "  ${CYAN}4${NC}) ${BOLD}$(t manage_services)${NC}"
     echo -e "  ${CYAN}5${NC}) ${BOLD}$(t manage_logs)${NC}"
-    echo -e "  ${CYAN}6${NC}) ${BOLD}$(t mtu_discovery)${NC}"
-    echo -e "  ${CYAN}7${NC}) ${BOLD}$(t exit)${NC}"
+    echo -e "  ${CYAN}6${NC}) ${BOLD}$(t check_buffers)${NC}"
+    echo -e "  ${CYAN}7${NC}) ${BOLD}$(t mtu_discovery)${NC}"
+    echo -e "  ${CYAN}8${NC}) ${BOLD}$(t exit)${NC}"
     echo ""
     if [ "$LANG_SELECTED" == "en" ]; then
-        read -p "Select [1-7]: " MENU_CHOICE
+        read -p "Select [1-8]: " MENU_CHOICE
     else
-        read -p "انتخاب کنید [1-7]: " MENU_CHOICE
+        read -p "انتخاب کنید [1-8]: " MENU_CHOICE
     fi
     
     case "$MENU_CHOICE" in
@@ -3489,9 +3769,12 @@ show_main_menu() {
             manage_logs
             ;;
         6)
-            find_optimal_mtu
+            check_buffers
             ;;
         7)
+            find_optimal_mtu
+            ;;
+        8)
             echo ""
             if [ "$LANG_SELECTED" == "en" ]; then
                 echo "Goodbye! 👋"
